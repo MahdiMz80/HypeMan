@@ -1,6 +1,7 @@
 dofile('discord_api_key.lua') -- bring in the channel 
 dofile('discord_channel_key.lua') -- bring in the channel 
-
+print(HYPEMAN_BOT_CLIENT_ID)
+print(HYPEMAN_CHANNEL_ID)
 local CHANNEL_ID = HYPEMAN_CHANNEL_ID
 local BOT_CLIENT_ID = HYPEMAN_BOT_CLIENT_ID
 

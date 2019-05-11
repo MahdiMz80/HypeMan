@@ -1,12 +1,15 @@
 HypeMan = {}
 -- Configuration Options
 local HypeManAnnounceTakeoffs = true
+local HypeManAnnounceLandings = true
 local HypeManAnnounceMissionStart = true
 local HypeManAnnounceMissionEnd = true
-local HypeManAnnounceAIPlanes = false
+local HypeManAnnounceAIPlanes = true
 local HypeManAnnouncePilotDead = true
 local HypeManAnnouncePilotEject = true
-
+local HypeManAnnounceKills = true
+local HypeManAnnounceHits = false
+local HypeManAnnounceCrash = true
 package.path  = package.path..";.\\LuaSocket\\?.lua;"
 package.cpath = package.cpath..";.\\LuaSocket\\?.dll;"
 local socket = require("socket")
@@ -15,7 +18,10 @@ HypeMan.UDPSendSocket = socket.udp()
 HypeMan.UDPSendSocket:settimeout(0)
 
 -- Table to store takeoff times
-TakeOffTime = {}
+HypeManTakeOffTime = {}
+
+-- table to store hits on aircraft
+HypeManHitTable = {}
 
 -- This is the function that can be called in any mission to send a message to discord.
 -- From the Mission Editor add a Trigger and a DO SCRIPT action and enter as the script:
@@ -69,7 +75,7 @@ local function HypeManTakeOffHandler(event)
 	
 		HypeMan.sendBotMessage(name .. " took off from " .. airfieldName .. " in a " .. Unit.getTypeName(event.initiator) )
 		
-		TakeOffTime[Unit.getID(event.initiator)]=timer.getAbsTime()
+		HypeManTakeOffTime[Unit.getID(event.initiator)]=timer.getAbsTime()
     end 
 end 
 
@@ -96,9 +102,9 @@ local function HypeManLandingHandler(event)
 			airfieldName = 'Unknown Airfield'
 		end
 		
-		local t = TakeOffTime[Unit.getID(event.initiator)]
+		local t = HypeManTakeOffTime[Unit.getID(event.initiator)]
 		
-		TakeOffTime[Unit.getID(event.initiator)] = nil
+		HypeManTakeOffTime[Unit.getID(event.initiator)] = nil
 		
 		if t == nil then
 			-- HypeMan.sendBotMessage("local t = TakeOffTime[Unit.getID(event.initiator)]  was nil... wtf")
@@ -147,7 +153,7 @@ local function HypeManBirthHandler(event)
 			name = Unit.getName(event.initiator)
 		end
 		
-		TakeOffTime[Unit.getID(event.initiator)]=nil
+		HypeManTakeOffTime[Unit.getID(event.initiator)]=nil
 		
 	--	HypeMan.sendBotMessage('S_EVENT_BIRTH UNIT.name = ' .. name)
 	end
@@ -156,6 +162,8 @@ end
 local function HypeManPilotDeadHandler(event)
 	if event.id == world.event.S_EVENT_PILOT_DEAD then
 	
+		-- HypeMan.sendBotMessage('Inside S_EVENT_PILOT_DEAD')
+		
 		local name = Unit.getPlayerName(event.initiator)
 		
 		-- for debugging get the AI plane names
@@ -171,7 +179,11 @@ local function HypeManPilotDeadHandler(event)
 --			name = Unit.getName(event.initiator)
 		-- end
 		
-		TakeOffTime[Unit.getID(event.initiator)]=nil
+		local unitid = Unit.getID(event.initiator)
+		
+		if unitid ~= nil and event.iniator ~= nil then
+			HyepManTakeOffTime[Unit.getID(event.initiator)]=nil
+		end
 		
 		HypeMan.sendBotMessage('RIP ' .. name .. '.  HypeMan pours out a little liquor for his homie.')		
 	end
@@ -188,22 +200,134 @@ local function HypeManPilotEjectHandler(event)
 			name = Unit.getName(event.initiator)
 		end
 		
+		if name == nil then			
+			return
+		end
+		
+		HypeManTakeOffTime[Unit.getID(event.initiator)]=nil		
+		
+		HypeMan.sendBotMessage(name .. ' has EJECTED from their' ..  Unit.getTypeName(event.initiator) .. '.  Send in the rescue helos!')		
+	end
+end
+
+local function HypeManDeadHandler(event)
+	if event.id == world.event.S_EVENT_DEAD then
+	
+		HypeMan.sendBotMessage('Inside PilotDeadHandler ... ')
+		
+		local name = Unit.getPlayerName(event.initiator)
+		
+		if HypeManAnnounceAIPlanes and name == nil then
+			name = Unit.getName(event.initiator)
+		end
+		
+		if name == nil then
+			HypeMan.sendBotMessage('name == nil inside S_EVENT_DEAD handler.')
+			return
+		end
+
+		killerInfo = HypeManHitTable[event.initiator]
+		
+		if killerInfo == nil then
+			HypeMan.sendBotMessage('killerInfo == nil.')
+		else
+			HypeMan.sendBotMessage(killerInfo.name .. ' destroyed a ' .. Unitg.getTypeName(event.initator) .. ' with a ' .. killerInfo.weaponType)
+		end
+		-- HypeMan.sendBotMessage('PilotName destroyed a ' .. Unit.getTypeName(event.initiator) .. ' WeaponType')
+	end
+end
+
+
+-- Event = {
+--  id = 2,
+--  time = Time,
+--  initiator = Unit,
+--  weapon = Weapon
+--  target = Object
+-- }
+-- Occurs whenever an object is hit by a weapon.
+-- Initiator : The unit object the fired the weapon
+-- Weapon: Weapon object that hit the target
+-- Target: The Object that was hit.
+local function HypeManCrashHandler(event)
+	if event.id == world.event.S_EVENT_CRASH then
+		local name = Unit.getPlayerName(event.initiator)
+
+	
+		if HypeManAnnounceAIPlanes and name == nil then
+			name = Unit.getName(event.initiator)
+		end
+	
+		if name == nil then		
+			return
+		end	
+		
+		-- HypeMan.sendBotMessage(name .. ' has crashed. ralph_ha_ha.gif')	
+	end
+end
+	
+local function HypeManHitHandler(event)
+	if event.id == world.event.S_EVENT_HIT then
+	
+		local name = Unit.getPlayerName(event.initiator)
+		
+		if event.target == nil then
+			HypeMan.sendBotMessage('event.target == nil inside S_EVENT_HIT handler')
+			return
+		end
+		
+		if HypeManAnnounceAIPlanes and name == nil then
+			name = Unit.getName(event.initiator)
+		end
+		
 		if name == nil then
 			return
 		end
 		
-		TakeOffTime[Unit.getID(event.initiator)]=nil		
+		--TakeOffTime[Unit.getID(event.initiator)]=timer.getAbsTime()
 		
-		HypeMan.sendBotMessage(name .. ' has EJECTED from their' ..  Unit.getTypeName(event.initiator) .. '.  Send in the rescue helos!')		
+		-- Event = {
+--  id = 2,
+--  time = Time,
+--  initiator = Unit,
+--  weapon = Weapon
+--  target = Object
+-- }
+		
+		hitInfo = {
+			weaponType = event.weapon:getTypeName(),
+			eventTime = event.time,
+			initiator = event.initiator,
+			initiatorName = name
+		}
+		
+		HypeManHitTable[event.target] = hitInfo
+		
+		if HypeManAnnounceHits then
+			HypeMan.sendBotMessage(name .. ' fired a ' .. event.weapon:getTypeName() .. ' and hit an ' .. Unit.getTypeName(event.target)  )	
+		end
 	end
-end 
+end
 
-mist.addEventHandler(HypeManTakeOffHandler)
-mist.addEventHandler(HypeManLandingHandler)
-
--- needed to start the time
 mist.addEventHandler(HypeManBirthHandler)
 
+if HypeManAnnounceCrash then
+	mist.addEventHandler(HypeManCrashHandler)
+end
+
+if HypeManAnnounceKills then
+	mist.addEventHandler(HypeManHitHandler)
+	mist.addEventHandler(HypeManDeadHandler)
+end
+	
+if HypeManAnnounceTakeoffs then
+	mist.addEventHandler(HypeManTakeOffHandler)
+end
+
+if HypeManAnnounceLandings then
+	mist.addEventHandler(HypeManLandingHandler)
+end
+	
 if HypeManAnnouncePilotEject then
 	mist.addEventHandler(HypeManPilotEjectHandler)
 end
