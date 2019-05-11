@@ -43,6 +43,20 @@ end
 	HypeMan.sendBotMessage('New server mission launched in the ' .. theatre .. '.  HypeMan standing by to stand by.  Local mission time is ' .. theTime .. ', ' .. theDate)
 end
 
+local function HypeManGetName(initiator)
+	if initiator == nil then
+		return false, nil;
+	end
+	
+	local statusflag, name = pcall(Unit.getPlayerName, initiator)
+	
+	if statusflag == false then
+		return false, nil;
+	end
+	
+	return true, name;
+end
+
 local function HypeManTakeOffHandler(event) 
 
 	-- TODO move this check below the timing code
@@ -52,9 +66,14 @@ local function HypeManTakeOffHandler(event)
 	
     if event.id == world.event.S_EVENT_TAKEOFF then 
 	
-		mist.utils.tableShow(event)
+		-- mist.utils.tableShow(event)
 		
-		local name = Unit.getPlayerName(event.initiator)
+		--local name = Unit.getPlayerName(event.initiator)
+		local statusflag, name = HypeManGetName(event.initiator)
+		
+		if statusflag == false then
+			return
+		end
 		
 		-- for debugging get the AI plane names
 		if HypeManAnnounceAIPlanes and name == nil then
@@ -82,8 +101,14 @@ end
 local function HypeManLandingHandler(event) 
     if event.id == world.event.S_EVENT_LAND then 
 	
-		mist.utils.tableShow(event)
-		local name = Unit.getPlayerName(event.initiator)
+		-- mist.utils.tableShow(event)
+		
+		-- local name = Unit.getPlayerName(event.initiator)
+		local statusflag, name = HypeManGetName(event.initiator)
+		
+		if statusflag == false then
+			return
+		end
 		
 		-- for debugging get the AI plane names
 		if HypeManAnnounceAIPlanes and name == nil then		
@@ -147,7 +172,13 @@ end
 
 local function HypeManBirthHandler(event)
 	if event.id == world.event.S_EVENT_BIRTH then
-		local name = Unit.getPlayerName(event.initiator)
+		-- local name = Unit.getPlayerName(event.initiator)
+		
+		local statusflag, name = HypeManGetName(event.initiator)
+		
+		if statusflag == false then
+			return
+		end
 		
 		if name == nil then
 			name = Unit.getName(event.initiator)
@@ -164,7 +195,12 @@ local function HypeManPilotDeadHandler(event)
 	
 		-- HypeMan.sendBotMessage('Inside S_EVENT_PILOT_DEAD')
 		
-		local name = Unit.getPlayerName(event.initiator)
+		-- local name = Unit.getPlayerName(event.initiator)
+		local statusflag, name = HypeManGetName(event.initiator)
+		
+		if statusflag == false then
+			return
+		end
 		
 		-- for debugging get the AI plane names
 		if HypeManAnnounceAIPlanes and name == nil then
@@ -193,7 +229,12 @@ end
 local function HypeManPilotEjectHandler(event)
 	if event.id == world.event.S_EVENT_EJECTION then
 	
-		local name = Unit.getPlayerName(event.initiator)
+		-- local name = Unit.getPlayerName(event.initiator)
+		local statusflag, name = HypeManGetName(event.initiator)
+		
+		if statusflag == false then
+			return
+		end
 		
 		-- for debugging get the AI plane names
 		if HypeManAnnounceAIPlanes and name == nil then
@@ -213,27 +254,44 @@ end
 local function HypeManDeadHandler(event)
 	if event.id == world.event.S_EVENT_DEAD then
 	
-		HypeMan.sendBotMessage('Inside PilotDeadHandler ... ')
+		HypeMan.sendBotMessage('----Inside Dead Handler ... ')
 		
-		local name = Unit.getPlayerName(event.initiator)
+		local statusflag, name = HypeManGetName(event.initiator)
+		
+		if statusflag == false then
+			return
+		end
+		
+		--goodun,eachlen = pcall(cutter,val1,val2)
+		--local name = ''
+		--local statusflag = true
+		--statusflag, name = pcall(Unit.getPlayerName,event.initiator)
+		
+	--	if statusflag == false then
+		--	HypeMan.sendBotMessage('S_EVENT_DEAD Unit.getPlayerName failed.')
+	--		return
+	--	end
 		
 		if HypeManAnnounceAIPlanes and name == nil then
 			name = Unit.getName(event.initiator)
 		end
 		
 		if name == nil then
-			HypeMan.sendBotMessage('name == nil inside S_EVENT_DEAD handler.')
+			HypeMan.sendBotMessage('    Unit.getPlayerName(event.initiator) == nil inside S_EVENT_DEAD handler.')
 			return
 		end
 
 		killerInfo = HypeManHitTable[event.initiator]
 		
+		HypeMan.sendBotMessage('    name=' .. name .. ',getTypeName=' ..  Unit.getTypeName(event.initiator))
 		if killerInfo == nil then
-			HypeMan.sendBotMessage('killerInfo == nil.')
+			HypeMan.sendBotMessage('    killerInfo == nil.  Could not get killerInfo for: ' .. name .. ' in a ' .. Unit.getTypeName(event.initiator))
 		else
-			HypeMan.sendBotMessage(killerInfo.name .. ' destroyed a ' .. Unitg.getTypeName(event.initator) .. ' with a ' .. killerInfo.weaponType)
+			HypeMan.sendBotMessage('   === Killer INfo === ')
+			HypeMan.sendBotMessage('    ' .. killerInfo.name .. ' destroyed a ' .. Unitg.getTypeName(event.initator) .. ' with a ' .. killerInfo.weaponType)
 		end
-		-- HypeMan.sendBotMessage('PilotName destroyed a ' .. Unit.getTypeName(event.initiator) .. ' WeaponType')
+	--	HypeMan.sendBotMessage('    PilotName destroyed a ' .. Unit.getTypeName(event.initiator) .. ' WeaponType')
+		HypeMan.sendBotMessage('---- Leaving Dead Handler')
 	end
 end
 
@@ -251,8 +309,17 @@ end
 -- Target: The Object that was hit.
 local function HypeManCrashHandler(event)
 	if event.id == world.event.S_EVENT_CRASH then
-		local name = Unit.getPlayerName(event.initiator)
-
+	
+	--	if event.initiator == nil then
+	--		return
+	--	end
+		
+		-- local name = Unit.getPlayerName(event.initiator)
+		local statusflag, name = HypeManGetName(event.initiator)
+		
+		if statusflag == false then
+			return
+		end
 	
 		if HypeManAnnounceAIPlanes and name == nil then
 			name = Unit.getName(event.initiator)
@@ -269,6 +336,10 @@ end
 local function HypeManHitHandler(event)
 	if event.id == world.event.S_EVENT_HIT then
 	
+		if event.initiator == nil then
+			return
+		end
+		
 		local name = Unit.getPlayerName(event.initiator)
 		
 		if event.target == nil then
@@ -303,6 +374,7 @@ local function HypeManHitHandler(event)
 		
 		HypeManHitTable[event.target] = hitInfo
 		
+		HypeMan.sendBotMessage('  --- hit handler --- ')
 		if HypeManAnnounceHits then
 			HypeMan.sendBotMessage(name .. ' fired a ' .. event.weapon:getTypeName() .. ' and hit an ' .. Unit.getTypeName(event.target)  )	
 		end
