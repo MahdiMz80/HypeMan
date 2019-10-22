@@ -1,7 +1,21 @@
 
-JSON = (loadfile "JSON.lua")() -- one-time load of the routines
-dofile('private_api_keys.lua')
+JSON = (loadfile "JSON.lua")() -- one-time load of JSON
 
+dofile('private_api_keys.lua')
+-------------------------------------------------------------------------------
+-- private_api_keys.lua you must create, it looks like the following:
+-- HypeMan BotID and Channel
+--PRIVATE_HYPEMAN_BOT_CLIENT_ID = 'Bot NTIzOTasdfc2.Dv3hMw.zepasdfJPxKzdTOLA'
+--PRIVATE_HYPEMAN_CHANNEL_ID = '525434328534'  -- #music
+-- Carrier Grade BotID and Channel
+--PRIVATE_CQ_CLIENT_ID = 'Bot NjAzMzk5MasdfOTI4.XTe80Q._Ccsy9qmnytCasdfhE'
+--PRIVATE_CQ_CHANNEL_ID = '6034126353296670' -- #snafu
+-- SERVERNAME = 'Rob Rules!!11!'
+-------------------------------------------------------------------------------
+
+-- Private Command ID, allow someone to send !commands to HypeMan through discord private message
+-- currently uses !connect and !disconnect for hypeman_voice to connect to a Discord voice channel
+PRIVATE_COMMAND_ID = '361935537571102720'
 print(PRIVATE_HYPEMAN_BOT_CLIENT_ID)
 print(PRIVATE_HYPEMAN_CHANNEL_ID)
 
@@ -13,9 +27,9 @@ local CQ_BOT_CHANNEL_ID = PRIVATE_CQ_CHANNEL_ID
 
 local privmsgid = PRIVATE_COMMAND_ID
 
+local announce_hypeman_start = false
 local PORT =  10081
 local HOST = '0.0.0.0'
-local ServerName = 'Rob Rulez!!!'
 
 local dgram = require('dgram')
 local discordia = require('discordia')
@@ -26,7 +40,6 @@ local ch = nil
 local cqbot = discordia.Client()
 local cqch = nil
 
-
 function tableHasKey(table,key)
     return table[key] ~= nil
 end
@@ -34,13 +47,19 @@ end
 client:on('ready', function()
     print('Logged in as '.. client.user.username)
     ch = client:getChannel(CHANNEL_ID)
-   -- ch:send('HypeMan is ready to hype.  Imma relay messages from Join Top Swing Dedicated Server (Too)')
+	
+	if announce_hypeman_start then
+		ch:send('HypeMan standing by to standby.')
+	end
 end)
 
 cqbot:on('ready', function()
     print('Logged in as '.. cqbot.user.username)
+		
     cqch = cqbot:getChannel(CQ_BOT_CHANNEL_ID)
-  --  cqch:send('Negative Ghostrider, the pattern is full.')
+	if announce_hypeman_start then
+		cqch:send('Negative Ghostrider, the pattern is full.')
+	end
 end)
 
 --local function has_value (tab, val)
@@ -175,6 +194,69 @@ local function wiq(str)
 	return str..', '
 end
 
+local function addToTable(tbl,keystr, defval)
+
+	if tbl[keystr] == nil then
+		tbl[keystr] = defval
+	end
+	
+	return tbl
+end
+	
+local function isempty(s)
+  return s == nil or s == ''
+end
+
+local function isString(s)
+	--print(type(s))
+	if type(s) == 'string' then
+		return true
+	elseif type(s) == nil then
+		return true
+	else
+		return false
+	end
+end
+
+function round2(num, numDecimalPlaces)
+  if isempty(num) then
+	return num
+  end
+
+  if isString(num) then
+
+	return num
+   end
+
+  return tonumber(string.format("%." .. (numDecimalPlaces or 0) .. "f", num))
+end
+	
+local function defaultGrade(mygrade)
+-- This function looks at the grade table provided by AIRBOSS and fills in any of the fields
+-- that might not be present
+	mygrade = addToTable(mygrade,'name','') --	mygrade.name
+	mygrade = addToTable(mygrade,'grade','')  -- mygrade.grade
+	mygrade = addToTable(mygrade,'points','') -- mygrade.points
+	mygrade = addToTable(mygrade,'finalscore','') -- mygrade.finalscore
+	mygrade.finalscore = round2(mygrade.finalscore,3)
+	
+	mygrade = addToTable(mygrade,'details','') -- mygrade.details
+	mygrade = addToTable(mygrade,'wire','') -- mygrade.wire
+	mygrade = addToTable(mygrade,'Tgroove','') -- mygrade.Tgroove
+	mygrade.Tgroove = round2(mygrade.Tgroove,2)
+	
+	mygrade = addToTable(mygrade,'case','') -- mygrade.case
+	mygrade = addToTable(mygrade,'wind','') -- mygrade.wind
+	mygrade = addToTable(mygrade,'modex','') -- mygrade.modex
+	mygrade = addToTable(mygrade,'airframe','') -- mygrade.airframe
+	mygrade = addToTable(mygrade,'carriertype','') -- mygrade.carriertype
+	mygrade = addToTable(mygrade,'carriername','') -- mygrade.carriername
+	mygrade = addToTable(mygrade,'theatre','') -- mygrade.theatre
+	mygrade = addToTable(mygrade,'mitime','') -- mygrade.mitime
+	mygrade = addToTable(mygrade,'midate','') -- mygrade.midate
+	return mygrade
+end
+
 local function getCsvString(mygrade)
 -- This function generates the CSV row that gets sent to google sheet.
 -- Every value gets wiq'd (wrapped in quotes (a single quote) )
@@ -195,16 +277,24 @@ local function getCsvString(mygrade)
 	my_string = my_string .. wiq( mygrade.theatre)
 	my_string = my_string .. wiq( mygrade.mitime)
 	my_string = my_string .. wiq(mygrade.midate)
-	my_string = my_string .. ' Server: ' .. ServerName
+	my_string = my_string .. ' Server: ' .. SERVERNAME
 	--my_string = my_string .. wiq( mygrade.osdate)
 	return my_string
 end
 
 local function getGradeString(mygrade)
 -- This is the function that formats the grade string that will get sent to Discord reporting the grade.
--- Example: Rob, OK, 3.0 PT, H_LUL_X _SLO_H_LUL_IM  SLOLOLULIC LOAR, 3-wire, groove time 17.0 seconds, (CASE I)
+-- Example: Rob, (OK), 3.5 PT, H_LUL_X _SLO_H_LUL_IM  SLOLOLULIC LOAR, 3-wire, groove time 17.0 seconds, (CASE I)
 	print ('LSO Grade, '.. mygrade.name .. ' trapped, sending to Discord')
-	local msg_string = mygrade.name .. ', ' .. mygrade.grade .. ', ' .. mygrade.points .. ' PT, ' .. mygrade.details .. ', ' .. getWireString(mygrade) .. ', groove time ' .. mygrade.Tgroove .. ' seconds' .. ', ' .. mygrade.airframe .. ', ' .. getCaseString(mygrade)
+	
+	local msg_string = mygrade.name .. ', ' .. mygrade.grade .. ', ' .. mygrade.points .. ' PT, ' .. mygrade.details .. ', ' .. getWireString(mygrade)
+	
+	if mygrade.case ~= 3 then
+		msg_string = msg_string .. ', ' .. mygrade.Tgroove .. ' seconds'		  
+	end
+	
+	msg_string = msg_string .. ', ' .. mygrade.airframe .. ', ' .. getCaseString(mygrade)	
+
 	return msg_string
 end
 
@@ -230,6 +320,8 @@ local function f(msg)
 						
 			if cqch ~= nil then
 				-- cqch:send('MessageType = 2')
+				
+				lua_table = defaultGrade(lua_table)				
 				local msg_string = getGradeString(lua_table)
 				print(msg_string)
 				--cqch:send(msg)
