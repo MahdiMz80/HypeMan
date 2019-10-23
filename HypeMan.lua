@@ -71,7 +71,7 @@ if HypeManAnnounceMissionStart then
 	local theDate = mist.getDateString(true, true)	
 	local theTime = mist.getClockString()	
 	local theatre = env.mission.theatre	
-	HypeMan.sendBotMessage('JOW West server - New mission launched in the ' .. theatre .. '.  HypeMan standing by to stand by.  Local mission time is ' .. theTime .. ', ' .. theDate)
+	HypeMan.sendBotMessage('$SERVERNAME - New mission launched in the ' .. theatre .. '.  HypeMan standing by to stand by.  Local mission time is ' .. theTime .. ', ' .. theDate)
 end
 
 local function HypeManGetName(initiator)
@@ -123,7 +123,7 @@ local function HypeManTakeOffHandler(event)
 			airfieldName = 'Unknown Airstrip'
 		end
 	
-		HypeMan.sendBotMessage(name .. " took off from " .. airfieldName .. " in a " .. Unit.getTypeName(event.initiator) .. " On JOW West Server")
+		HypeMan.sendBotMessage(name .. " took off from " .. airfieldName .. " in a " .. Unit.getTypeName(event.initiator) .. " on $SERVERNAME")
 		
 		HypeManTakeOffTime[Unit.getID(event.initiator)]=timer.getAbsTime()
     end 
@@ -164,7 +164,7 @@ local function HypeManLandingHandler(event)
 		
 		if t == nil then
 			-- HypeMan.sendBotMessage("local t = TakeOffTime[Unit.getID(event.initiator)]  was nil... wtf")
-			HypeMan.sendBotMessage(name .. " landed their " ..  Unit.getTypeName(event.initiator) .. " at " .. airfieldName .. " On JOW West Server")
+			HypeMan.sendBotMessage(name .. " landed their " ..  Unit.getTypeName(event.initiator) .. " at " .. airfieldName .. " on $SERVERNAME")
 			return
 		end
 			
@@ -174,7 +174,7 @@ local function HypeManLandingHandler(event)
 		local theTime = mist.getClockString(tduration)	
 		
 		if tduration > HypeManMinimumFlightTime then
-			HypeMan.sendBotMessage(name .. " landed their " ..  Unit.getTypeName(event.initiator) .. " at " .. airfieldName .. " on JOW West Server.  Total flight time was " .. theTime)
+			HypeMan.sendBotMessage(name .. " landed their " ..  Unit.getTypeName(event.initiator) .. " at " .. airfieldName .. " on $SERVERNAME. Total flight time was " .. theTime)
 		end
     end 
 end 
@@ -198,7 +198,7 @@ local function HypeManMissionEndHandler(event)
 		
 		local theTimeString  = dayStr .. DHMS.h .. ' hours and ' .. DHMS.m .. ' minutes.'		
 		
-		HypeMan.sendBotMessage('JOW West Server shutting down, mission ran for ' .. theTimeString .. '  Hypeman going watch TOPGUN again.');
+		HypeMan.sendBotMessage('$SERVERNAME shutting down, mission ran for ' .. theTimeString .. '  Hypeman going watch TOPGUN again.');
 	end
 end
 
@@ -277,7 +277,7 @@ local function HypeManPilotEjectHandler(event)
 		
 		HypeManTakeOffTime[Unit.getID(event.initiator)]=nil		
 		
-		HypeMan.sendBotMessage(name .. ' has EJECTED from their' ..  Unit.getTypeName(event.initiator) .. ' on JOW West Server.  Send in the rescue helos!')		
+		HypeMan.sendBotMessage(name .. ' has EJECTED from their' ..  Unit.getTypeName(event.initiator) .. ' on $SERVERNAME.  Send in the rescue helos!')		
 	end
 end
 
@@ -318,7 +318,7 @@ local function HypeManRefuelingHandler(event)
 		HypeManRefuelingTable[Unit.getID(event.initiator)] = cur
 		
 		if sendMessage == true then
-			HypeMan.sendBotMessage('   a\'ight, looks like ' .. name .. ' is getting a poke on the JOW West server.')
+			HypeMan.sendBotMessage('   a\'ight, looks like ' .. name .. ' is getting a poke on the $SERVERNAME.')
 		end			
 	end
 end

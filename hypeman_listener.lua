@@ -1,4 +1,5 @@
 
+local string = require('string') -- load standard string library included with lua
 JSON = (loadfile "JSON.lua")() -- one-time load of JSON
 
 dofile('private_api_keys.lua')
@@ -27,7 +28,7 @@ local CQ_BOT_CHANNEL_ID = PRIVATE_CQ_CHANNEL_ID
 
 local privmsgid = PRIVATE_COMMAND_ID
 
-local announce_hypeman_start = false
+local announce_hypeman_start = true
 local PORT =  10081
 local HOST = '0.0.0.0'
 
@@ -48,7 +49,7 @@ client:on('ready', function()
     print('Logged in as '.. client.user.username)
     ch = client:getChannel(CHANNEL_ID)
 	
-	if announce_hypeman_start then
+	if ch ~= nil and announce_hypeman_start then
 		ch:send('HypeMan standing by to standby.')
 	end
 end)
@@ -57,7 +58,8 @@ cqbot:on('ready', function()
     print('Logged in as '.. cqbot.user.username)
 		
     cqch = cqbot:getChannel(CQ_BOT_CHANNEL_ID)
-	if announce_hypeman_start then
+	
+	if cqch ~= nil and announce_hypeman_start then
 		cqch:send('Negative Ghostrider, the pattern is full.')
 	end
 end)
@@ -309,6 +311,8 @@ local function f(msg)
 			-- print the message
 			if ch ~= nil then
 				local msg_string = lua_table['messageString']
+				
+				msg_string = string.gsub(msg_string, '$SERVERNAME', SERVERNAME)
 				
 				if msg_string ~= nil then
 					ch:send(msg_string)
