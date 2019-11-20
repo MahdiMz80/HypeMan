@@ -1,13 +1,14 @@
-#import csv
-#import sys
-#import pprint
 import gspread
 import json
 import os 
 import time
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+from matplotlib.table import Table
+from matplotlib.font_manager import FontProperties
 import numpy as np
+import statistics
+
 
 from oauth2client.service_account import ServiceAccountCredentials
 #from datetime import datetime
@@ -81,7 +82,7 @@ def calculateGradeCivilian(curList, grade0):
             return pt
         else:
             #print('No finalscore for ', i['pilot'])
-            return pt
+            return 0.0
            
             
 def calculateGrade(curList, grade0):
@@ -141,6 +142,7 @@ grade0={}; grade0['color']='white'; grade0['score']=0.0; grade0['symbol']='x'; g
 pilots = []
 
 pilotRows = []
+pilotDict = {}
 # get the rows
 for i in reversed(data):
     name = i['pilot']
@@ -150,6 +152,7 @@ for i in reversed(data):
         pilotRow = calculatePilotRow(data, name, grade0)
         print(name,' score: ' , pilotRow)
         pilotRows.append(pilotRow)
+        pilotDict[name]=pilotRow
         
 
 maxLength = 0
@@ -157,22 +160,84 @@ for i in pilotRows:
     if len(i) > maxLength:
         maxLength = len(i)
     
-table_vars = []    
-for i in pilotRows:
-    for k in i:
-        print(k)
-    for j in range(len(i),maxLength):
-        print(j)
-        
-        
+    
+fig = plt.figure(dpi=150)
+ax = fig.add_subplot(1,1,1)
+frame1 = plt.gca()
+frame1.axes.get_xaxis().set_ticks([])
+frame1.axes.get_yaxis().set_ticks([])
 
-  
-fig = plt.figure(dpi=100)
-ax = fig.add_subplot(1,1,1)        
-col_lables = ['Pilot', 'Qual','A','B','C','D','E']
-table_vals = [['1', 'yes', 'None', 'False', 'False', 'no', '6.0'],['1', 'yes', 'None', 'False', 'False', 'no', '6.0']]
-table_vals = [[1,2,3,4,5,6],[1,2,3,4,5,6],[1,2,3,4,5,6]]
-tab1 = ax.table(cellText=[table_vals], colLabels=col_lables)
-#tab1.scale(1,4)
-ax.axis('off')
-plt.savefig('file.png')
+tb = Table(ax, bbox=[0, 0, 1, 1])
+
+n_cols = maxLength+2
+n_rows = len(pilots)+1
+width, height = 100 / n_cols, 100.0 / n_rows
+anchor='⚓'
+ 
+cell = tb.add_cell(0,0,3*width,height,text='Callsign',loc='center',facecolor='w') #edgecolor='none'
+#cell.set_fontsize(24)
+cell = tb.add_cell(0,1,width,height,text='Av.',loc='center',facecolor='w') #edgecolor='none'
+#cell.set_fontsize(24)
+for col_idx in range(2,maxLength+2):
+    cell = tb.add_cell(0, col_idx, width, height,
+                    text='',
+                    loc='center',
+                    facecolor='w')     
+
+#cell.set_text_props(family='')
+
+
+anchor='⚓'
+#unicorn='✈️'
+blankcell='w'
+colors=['red','orange','orange','yellow','green']
+ 
+
+minDate = data[-1]['ServerDate']
+maxDate = data[0]['ServerDate']
+
+titlestr = 'JOW Greenie Board ' + minDate + ' to ' + maxDate
+for p_idx in range(0,len(pilots)):
+    row_idx = p_idx+1
+    cell = tb.add_cell(row_idx,0,3*width,height,text=pilots[p_idx],loc='center',facecolor=blankcell) #edgecolor='none'    
+    
+    name = pilots[p_idx];
+    rd = pilotDict[name]
+    avg = statistics.mean(rd)
+    cell = tb.add_cell(row_idx,1,width,height,text=round(avg,1),loc='center',facecolor=blankcell)
+    
+    col_idx = 2
+    for g in rd:
+        
+        text = ''
+        if g == 0:
+            color=colors[0]
+        elif g > 0 and g < 1:
+            color=colors[1]
+        elif g >=1 and g < 2:
+            color=colors[2]
+        elif g >=2 and g < 3:
+            color = colors[3]
+        elif g >=3:
+            color = colors[4]
+        else:
+            color = blankcell
+                    
+        if g > 4.5:
+            text=anchor            
+                        
+        cell = tb.add_cell(row_idx,col_idx,width,height,text=text,loc='center',facecolor=color) #edgecolor='none'    
+        col_idx = col_idx + 1
+                
+        
+    color = blankcell
+    text=''
+    for f in range(col_idx,maxLength+2):
+        cell = tb.add_cell(row_idx,f,width,height,text=text,loc='center',facecolor=color) #edgecolor='none'            
+        
+        
+tb.set_fontsize(7)    
+ax.add_table(tb)    
+plt.title(titlestr,color='w')
+
+plt.savefig('file.png',transparent=True)
