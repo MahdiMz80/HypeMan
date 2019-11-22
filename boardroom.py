@@ -169,43 +169,59 @@ frame1.axes.get_yaxis().set_ticks([])
 
 tb = Table(ax, bbox=[0, 0, 1, 1])
 
+tb.auto_set_font_size(False)
+
+
 n_cols = maxLength+2
 n_rows = len(pilots)+1
 width, height = 100 / n_cols, 100.0 / n_rows
 anchor='⚓'
+#unicorn='✈️'
+blankcell='#1A392A'
+colors=['red','orange','orange','yellow','lightgreen']
  
-cell = tb.add_cell(0,0,3*width,height,text='Callsign',loc='center',facecolor='w') #edgecolor='none'
+
+minDate = data[-1]['ServerDate']
+maxDate = data[0]['ServerDate']
+textcolor = '#FFFFF0'
+edgecolor = '#708090'
+cell = tb.add_cell(0,0,3*width,height,text='Callsign',loc='center',facecolor=blankcell) #edgecolor='none'
+cell.get_text().set_color(textcolor)
+cell.set_text_props(fontproperties=FontProperties(weight='bold',size=8))   
+cell.set_edgecolor(edgecolor)
 #cell.set_fontsize(24)
-cell = tb.add_cell(0,1,width,height,text='Av.',loc='center',facecolor='w') #edgecolor='none'
+cell = tb.add_cell(0,1,width,height,text='Av.',loc='center',facecolor=blankcell) #edgecolor='none'
+cell.get_text().set_color(textcolor)
+cell.set_edgecolor(edgecolor)
+cell.set_text_props(fontproperties=FontProperties(weight='bold',size=8))
+cell.set_edgecolor(edgecolor)
 #cell.set_fontsize(24)
 for col_idx in range(2,maxLength+2):
     cell = tb.add_cell(0, col_idx, width, height,
                     text='',
                     loc='center',
-                    facecolor='w')     
+                    facecolor=blankcell)    
+    cell.set_edgecolor(edgecolor)
 
 #cell.set_text_props(family='')
 
 
-anchor='⚓'
-#unicorn='✈️'
-blankcell='w'
-colors=['red','orange','orange','yellow','green']
- 
 
-minDate = data[-1]['ServerDate']
-maxDate = data[0]['ServerDate']
 
 titlestr = 'JOW Greenie Board ' + minDate + ' to ' + maxDate
 for p_idx in range(0,len(pilots)):
     row_idx = p_idx+1
-    cell = tb.add_cell(row_idx,0,3*width,height,text=pilots[p_idx],loc='center',facecolor=blankcell) #edgecolor='none'    
-    
+    cell = tb.add_cell(row_idx,0,3*width,height,text=pilots[p_idx],loc='center',facecolor=blankcell,edgecolor='blue') #edgecolor='none'    
+    cell.get_text().set_color(textcolor)
+    cell.set_text_props(fontproperties=FontProperties(weight='bold',size="7.5"))
+    cell.set_edgecolor(edgecolor)
     name = pilots[p_idx];
     rd = pilotDict[name]
     avg = statistics.mean(rd)
     cell = tb.add_cell(row_idx,1,width,height,text=round(avg,1),loc='center',facecolor=blankcell)
-    
+    cell.get_text().set_color(textcolor)
+    cell.set_text_props(fontproperties=FontProperties(weight='bold',size="7.4"))
+    cell.set_edgecolor(edgecolor)
     col_idx = 2
     for g in rd:
         
@@ -224,20 +240,31 @@ for p_idx in range(0,len(pilots)):
             color = blankcell
                     
         if g > 4.5:
-            text=anchor            
-                        
-        cell = tb.add_cell(row_idx,col_idx,width,height,text=text,loc='center',facecolor=color) #edgecolor='none'    
+            text=anchor    
+                    
+        cell = tb.add_cell(row_idx,col_idx,width,height,text=text,loc='center',facecolor=color) #edgecolor='none'  
+        cell.get_text().set_color('#333412')
+       # cell.auto_set_font_size()
+        cell.set_text_props(fontproperties=FontProperties(weight='bold',size="14"))
+        cell.set_edgecolor(edgecolor)    
         col_idx = col_idx + 1
                 
         
     color = blankcell
     text=''
+    
+    # add the remaining cells to the end
     for f in range(col_idx,maxLength+2):
         cell = tb.add_cell(row_idx,f,width,height,text=text,loc='center',facecolor=color) #edgecolor='none'            
+        cell.set_edgecolor(edgecolor)
         
-        
-tb.set_fontsize(7)    
-ax.add_table(tb)    
-plt.title(titlestr,color='w')
+#tb.set_fontsize(7)    
+ax.add_table(tb)
+ax.set_axis_off()
+ax.axis('off')
+plt.box(False)
+ax.get_xaxis().set_ticks([])
+ax.get_yaxis().set_ticks([])
+#plt.title(titlestr,color='w')
 
-plt.savefig('file.png',transparent=True)
+plt.savefig('board.png',transparent=False,bbox_inches='tight', pad_inches=0)
