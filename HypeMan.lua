@@ -248,7 +248,7 @@ local function HypeManPilotDeadHandler(event)
 		local unitid = Unit.getID(event.initiator)
 		
 		if unitid ~= nil and event.iniator ~= nil then
-			HyepManTakeOffTime[Unit.getID(event.initiator)]=nil
+			HypeManTakeOffTime[Unit.getID(event.initiator)]=nil
 		end
 		
 		HypeMan.sendBotMessage('RIP ' .. name .. '.  HypeMan pours out a little liquor for his homie.')		
