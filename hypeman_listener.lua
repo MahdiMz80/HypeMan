@@ -76,30 +76,30 @@ end)
 
 client:on('messageCreate', function(message)	
 	
-	if message.content == '!connect' and message.author.id == privmsgid and message.channel.guild == nil then	
-		print('Message was !connect received')
-		message.channel:send('connecting to voice comms.')
-		ConnectVoice()
-		return
-	end
+--	if message.content == '!connect' and message.author.id == privmsgid and message.channel.guild == nil then	
+--		print('Message was !connect received')
+--		message.channel:send('connecting to voice comms.')
+--		ConnectVoice()
+--		return
+--	end
 	
-	if message.content == '!disconnect' and message.author.id == privmsgid and message.channel.guild == nil then
-	    message.channel:send('disconnecting from voice comms.')
-		DisconnectVoice()
-		return
-	end	
+--	if message.content == '!disconnect' and message.author.id == privmsgid and message.channel.guild == nil then
+--	    message.channel:send('disconnecting from voice comms.')
+--		DisconnectVoice()
+--		return
+--	end	
 	
-	if message.author.id == privmsgid and message.channel.guild == nil then
-		print('Creating Message '..message.content)
-		CreateVoiceMp3(message.content)
-	end
+--	if message.author.id == privmsgid and message.channel.guild == nil then
+--		print('Creating Message '..message.content)
+--		CreateVoiceMp3(message.content)
+--	end
 		
-	if id  == CHANNEL_ID then
-		local content = message.content
-		if content == '!info' or content == '!about' or content == '!hypeman' then			
-			message.channel:send('HypeMan is an experimental Discord bot to announce Digital Combat Simulator (DCS) game events to Discord.  See https://aggressors.ca/hypeman for more information')		
-		end
-	end	
+--	if id  == CHANNEL_ID then
+--		local content = message.content
+--		if content == '!info' or content == '!about' or content == '!hypeman' then			
+--			message.channel:send('HypeMan is an experimental Discord bot to announce Digital Combat Simulator (DCS) game events to Discord.  See https://aggressors.ca/hypeman for more information')		
+--		end
+--	end	
 end)
 
 client:run(BOT_CLIENT_ID)
@@ -289,7 +289,10 @@ local function getGradeString(mygrade)
 -- Example: Rob, (OK), 3.5 PT, H_LUL_X _SLO_H_LUL_IM  SLOLOLULIC LOAR, 3-wire, groove time 17.0 seconds, (CASE I)
 	print ('LSO Grade, '.. mygrade.name .. ' trapped, sending to Discord')
 	
-	local msg_string = mygrade.name .. ', ' .. mygrade.grade .. ', ' .. mygrade.points .. ' PT, ' .. mygrade.details .. ', ' .. getWireString(mygrade)
+	local grade_string = string.gsub(mygrade.grade, '_', '\\_')
+	local details_string = string.gsub(mygrade.details, '_','\\_')
+
+	local msg_string = mygrade.name .. ', ' .. grade_string .. ', ' .. mygrade.points .. ' PT, ' .. details_string .. ', ' .. getWireString(mygrade)
 	
 	if mygrade.case ~= 3 then
 		msg_string = msg_string .. ', ' .. mygrade.Tgroove .. ' seconds'		  

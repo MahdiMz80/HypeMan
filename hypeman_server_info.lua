@@ -37,6 +37,15 @@ client:on('messageCreate', function(message)
 		return
 	end
 	
+	if message.content == '#boatstuff' then
+		local final_string = 'boardroom.bat'
+		os.execute(final_string)		
+		message.channel:send {
+			file = "final.jpg",
+		}
+		--channel.sendMessage("message").addFile(new File("path/to/file")).queue();
+	end	
+	
 end)
 
 client:run(BOT_CLIENT_ID)

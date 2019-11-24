@@ -39,13 +39,17 @@ def doHost(servername, hostname):
 	serverIP = GetServerIP(hostname)
 	dcsStatus = "DOWN"
 	srsStatus = "DOWN"
+	LotATCStatus = "DOWN"	
 	if checkHost(hostname, 10308, retry, delay, timeout):
 		dcsStatus = "UP"
 		
 	if checkHost(hostname, 5002, retry, delay, timeout):
 		srsStatus = "UP"
 		
-	print(servername + ", hostname: " + hostname + ", ip: " + serverIP + ", DCS: " + dcsStatus + ", SRS: " + srsStatus)
+	if checkHost(hostname, 10310, retry, delay, timeout):
+		LotATCStatus = "UP"
+		
+	print(servername + ", hostname: " + hostname + ", ip: " + serverIP + ", DCS: " + dcsStatus + ", SRS: " + srsStatus + ", LotATC: " + LotATCStatus)
 	
 if __name__ == "__main__":	
 	doHost('JOW East','jow2.aggressors.ca')

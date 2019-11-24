@@ -1,0 +1,2 @@
+curl -H "Authorization: Bearer" -H "Content-Type: application/json; charset=utf-8" --data "{ \"input\":{ \"text\":%1 }, \"voice\":{ \"languageCode\":\"en-au\", \"name\":\"en-AU-Wavenet-D\", \"ssmlGender\":\"MALE\" }, \"audioConfig\":{ \"audioEncoding\":\"MP3\", \"pitch\": -7, \"speakingRate\": 0.75 } }" "https://texttospeech.googleapis.com/v1/text:synthesize?key=YOUR_API_KEY_HERE" > %2.txt
+base64.exe -d -i %2.txt > %2.mp3

@@ -60,7 +60,7 @@ def isPilotQual(name):
 def calculateGradeQual(curList, grade0):
     
     try:
-        pt = float(curList[0]['finalscore'])
+        pt = float(curList[0]['points'])
        # print('(QUAL) points ', pt, ' for ', curList[0]['pilot'])
         return pt
     except:
@@ -72,13 +72,13 @@ def calculateGradeCivilian(curList, grade0):
     x = 0
     for i in curList:
         try:
-            pt = float(i['finalscore'])
+            pt = float(i['points'])
         except:
             x=0
             
         if pt >= 0.0:
             #print('(UNQUAL) highest score for ', i['pilot'], ' as ', pt)
-            #grade['finalscore']=pt
+            #grade['points']=pt
             return pt
         else:
             #print('No finalscore for ', i['pilot'])
@@ -190,18 +190,29 @@ cell.get_text().set_color(textcolor)
 cell.set_text_props(fontproperties=FontProperties(weight='bold',size=8))   
 cell.set_edgecolor(edgecolor)
 #cell.set_fontsize(24)
-cell = tb.add_cell(0,1,width,height,text='Av.',loc='center',facecolor=blankcell) #edgecolor='none'
+cell = tb.add_cell(0,1,width,height,text='',loc='center',facecolor=blankcell) #edgecolor='none'
 cell.get_text().set_color(textcolor)
 cell.set_edgecolor(edgecolor)
 cell.set_text_props(fontproperties=FontProperties(weight='bold',size=8))
 cell.set_edgecolor(edgecolor)
 #cell.set_fontsize(24)
+titlestr = ' JOINT OPS WING'
+count = 0
 for col_idx in range(2,maxLength+2):
+    
+    text = ''
+    
+    if count < len(titlestr):
+        text = titlestr[count]
+        count = count + 1
     cell = tb.add_cell(0, col_idx, width, height,
-                    text='',
+                    text=text,
                     loc='center',
                     facecolor=blankcell)    
     cell.set_edgecolor(edgecolor)
+    cell.get_text().set_color(textcolor)
+    cell.set_text_props(fontproperties=FontProperties(weight='bold',size=8))   
+    cell.set_edgecolor(edgecolor)    
 
 #cell.set_text_props(family='')
 
