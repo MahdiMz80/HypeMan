@@ -303,10 +303,17 @@ local function getGradeString(mygrade)
 	return msg_string
 end
 
+
+function savetxt ( t )
+   local file = assert(io.open("lso_table.json", "w"))
+   file:write(t)
+   file:close()
+end
+
 local function f(msg)
 
 	local lua_table = JSON:decode(msg)
-	
+	savetxt(msg)
 	if lua_table['messageType']  ~= nil then
 		local msg_id = lua_table['messageType']
 		
@@ -328,7 +335,7 @@ local function f(msg)
 			if cqch ~= nil then
 				-- cqch:send('MessageType = 2')
 				
-				lua_table = defaultGrade(lua_table)				
+				lua_table = defaultGrade(lua_table)		
 				local msg_string = getGradeString(lua_table)
 				print(msg_string)
 				--cqch:send(msg)
@@ -337,6 +344,13 @@ local function f(msg)
 				local execString = "\".\\gsheet_upload.bat " .. "\"" .. msg2 .. "\"\""
 				print(execString)
 				io.popen(execString,'w')
+				
+				local execString2 = 'trapsheet.bat'
+				os.execute(execString2)
+				
+				message.channel:send {
+					file = "trapsheet.png",
+				}				
 			end
 
 		elseif msg_id == 3 then
