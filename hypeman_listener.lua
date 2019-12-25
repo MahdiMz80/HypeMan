@@ -28,7 +28,7 @@ local CQ_BOT_CHANNEL_ID = PRIVATE_CQ_CHANNEL_ID
 
 local privmsgid = PRIVATE_COMMAND_ID
 
-local announce_hypeman_start = true
+local announce_hypeman_start = false
 local PORT =  10081
 local HOST = '0.0.0.0'
 
@@ -190,8 +190,8 @@ end
 --mygrade.midate= '1999/03/24'
 --mygrade.osdate = '2019/09/10 01:02:03'
 
--- this function was called wrap in quotes because it originally wrapped
--- any value in quotes.  But now it joins values with a , but the name is kept.
+-- this function was called wrap in quotes (wiq) because it originally wrapped
+-- values in quotes.  But now it joins values with a ',' but the name was kept
 local function wiq(str)
 	return str..', '
 end
@@ -232,7 +232,8 @@ function round2(num, numDecimalPlaces)
 
   return tonumber(string.format("%." .. (numDecimalPlaces or 0) .. "f", num))
 end
-	
+
+
 local function defaultGrade(mygrade)
 -- This function looks at the grade table provided by AIRBOSS and fills in any of the fields
 -- that might not be present
@@ -284,6 +285,49 @@ local function getCsvString(mygrade)
 	return my_string
 end
 
+
+-- calculate Flight Hours: wheels up - wheels down + 5 minutes, round to 0.1 hours
+-- https://www.airliners.net/forum/viewtopic.php?t=774829
+local function calcFlightHours(mylog)
+	local flighHours = 0
+	
+	if mylog.trackedTime ~= nil then
+		flightHours = round2(mylog.trackedTime,1)
+		-- print('flight hours rounded: '..flightHours)
+	end
+	
+	return flightHours	
+end
+
+local function getFlightLogCsvString(mylog)
+
+	flightHours = calcFlightHours(mylog)
+
+	local my_string = wiq(mylog.callsign)
+	
+	my_string = my_string .. wiq( flightHours )
+	my_string = my_string .. wiq( mylog.acType )
+	my_string = my_string .. wiq( mylog.numTakeoffs)
+	my_string = my_string .. wiq( mylog.numLandings)
+	my_string = my_string .. wiq( mylog.departureField )
+	my_string = my_string .. wiq( mylog.arrivalField1 )
+	my_string = my_string .. wiq( mylog.arrivalField2 )
+	my_string = my_string .. wiq( mylog.coalition )
+	my_string = my_string .. wiq( mylog.missionType )
+	my_string = my_string .. wiq( SERVERNAME )
+	my_string = my_string .. wiq( os.date('%Y/%m/%d') )
+	my_string = my_string .. wiq( os.date('%H:%M:%S') ) 
+	my_string = my_string .. wiq( mylog.theatre )
+	my_string = my_string .. wiq( mylog.dead )
+	my_string = my_string .. wiq( mylog.crash )
+	my_string = my_string .. wiq( mylog.ejected )
+	my_string = my_string .. wiq( mylog.refueled )
+	my_string = my_string .. wiq( mylog.humanFailure )
+	my_string = my_string .. wiq( mylog.airStart )
+	my_string = my_string .. wiq( mylog.missionEnd )
+	return my_string
+end
+
 local function getGradeString(mygrade)
 -- This is the function that formats the grade string that will get sent to Discord reporting the grade.
 -- Example: Rob, (OK), 3.5 PT, H_LUL_X _SLO_H_LUL_IM  SLOLOLULIC LOAR, 3-wire, groove time 17.0 seconds, (CASE I)
@@ -304,7 +348,16 @@ local function getGradeString(mygrade)
 end
 
 
-function savetxt ( t )
+local function savetable ( tbl, myfilename)
+   local file = assert(io.open(myfilename, "w"))
+   
+   local tbl_json_txt = JSON:encode(tbl) 
+   
+   file:write(tbl_json_txt )
+   file:close()
+end
+
+local function savetxt ( t )
    local file = assert(io.open("lso_table.json", "w"))
    file:write(t)
    file:close()
@@ -316,7 +369,7 @@ local function f(msg)
 	savetxt(msg)
 	if lua_table['messageType']  ~= nil then
 		local msg_id = lua_table['messageType']
-		
+			
 		if msg_id == 1 then
 			-- print the message
 			if ch ~= nil then
@@ -355,6 +408,15 @@ local function f(msg)
 
 		elseif msg_id == 3 then
 			-- PILOT FLIGHT TIME MESSAGE?
+			print('FLIGHT LOG MESSAGE RECEIVED')
+
+			local flightLogString = getFlightLogCsvString(lua_table)
+			--local flightLogString = 'abc'
+			local execString = "\".\\flightlog_upload.bat ".. "\"" .. flightLogString .. "\"\""
+			print(execString)
+			io.popen(execString,'w')
+
+			--savetxt ( msg3 )			
 			
 		elseif msg_id == 4 then
 			-- WEAPON RELEASE MESSAGE?
@@ -363,8 +425,7 @@ local function f(msg)
 			-- HIT OR DAMAGE MESSAGE?
 		end
 	end
-	
-	
+
 end
 
 --local msg2 = "TG, (OK), 3.0 PT, F(LOLUR)X F(LOLUR)IM  (F)IC , 1-wire, groove time 22.0 seconds, (CASE I)"    
