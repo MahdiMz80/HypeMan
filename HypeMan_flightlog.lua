@@ -57,7 +57,7 @@ HypeMan.sendDebugMessage = function(msg)
 	end
 end
 
-HypeMan.sendBotMessage  = function(msg)
+HypeMan.sendBotMessage = function(msg)
 	local messageTable = {}
 	messageTable.messageType = 1
 	messageTable.messageString = msg
@@ -87,25 +87,6 @@ local function addFlightTime(flID)
 		HypeManFlightLog[flID].departureTimer = nil 
 	end
 end
-
-local function sendFlightLog(flID)
-	
-	if HypeManFlightLog[flID].pending and HypeManFlightLog[flID].submitted == false then
-		HypeMan.sendDebugMessage(' sendFlightLog via UDP for ID: '..flID)	
-		HypeMan.sendBotTable(HypeManFlightLog[flID])
-		-- the only place a submitted = false gets sent is on takeoffs
-		
-		HypeManFlightLog[flID].submitted = true 
-		HypeManFlightLog[flID].pending = false
-		
-		-- Once an entry has been submitted the flight logging stats for that row of the spreadsheet get reset
-		resetAfterSubmission(flID)
-	else
-		-- I don't think this code will ever get called now.  Once the flight log is submitted, that unit ID gets reset in the table now
-		HypeMan.sendDebugMessage(' went to sendFlightLog() for ID '.. ' but it was already submitted.')	
-	end
-end
-
 
 local function resetAfterSubmission(flID)
 -- This function resets some of the tracked flight statistics after a flight log is submitted.  This allows handling the case
@@ -139,6 +120,25 @@ local function resetAfterSubmission(flID)
 	
 	HypeMan.sendDebugMessage('end of resetAfterSubmission for ID: ' .. flID)
 end
+
+local function sendFlightLog(flID)
+	
+	if HypeManFlightLog[flID].pending and HypeManFlightLog[flID].submitted == false then
+		HypeMan.sendDebugMessage(' sendFlightLog via UDP for ID: '..flID)	
+		HypeMan.sendBotTable(HypeManFlightLog[flID])
+		-- the only place a submitted = false gets sent is on takeoffs
+		
+		HypeManFlightLog[flID].submitted = true 
+		HypeManFlightLog[flID].pending = false
+		
+		-- Once an entry has been submitted the flight logging stats for that row of the spreadsheet get reset
+		resetAfterSubmission(flID)
+	else
+		-- I don't think this code will ever get called now.  Once the flight log is submitted, that unit ID gets reset in the table now
+		HypeMan.sendDebugMessage(' went to sendFlightLog() for ID '.. ' but it was already submitted.')	
+	end
+end
+
 
 local function flightLogNewEntry()
 -- this function fills in an empty flight log entry with no details about the flight
