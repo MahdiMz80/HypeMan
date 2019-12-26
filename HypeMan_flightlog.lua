@@ -17,13 +17,13 @@ local HypeManAnnounceTakeoffs = true
 local HypeManAnnounceLandings = true
 local HypeManAnnounceMissionStart = true
 local HypeManAnnounceMissionEnd = true
-local HypeManAnnounceAIPlanes = true
+local HypeManAnnounceAIPlanes = false
 local HypeManAnnouncePilotDead = true
 local HypeManAnnouncePilotEject = true
 local HypeManAnnouncePilotCrash = false
 local HypeManAnnounceHits = false
 local HypeManAnnounceRefueling = false
-local HypeManMinimumFlightTime = 1800  -- minimum flight time to report in minutes
+local HypeManMinimumFlightTime = 0.0  -- minimum flight time to report in minutes
 
 package.path  = package.path .. ';.\\LuaSocket\\?.lua;'
 package.cpath = package.cpath .. ';.\\LuaSocket\\?.dll;'
@@ -78,11 +78,17 @@ if HypeManAnnounceMissionStart then
 	local theDate = mist.getDateString(true, true)
 	local theTime = mist.getClockString()
 	local theatre = env.mission.theatre
-	HypeMan.sendBotMessage('$SERVERNAME - New mission launched in the ' .. theatre .. '.  HypeMan standing by to stand by.  Local mission time is ' .. theTime .. ', ' .. theDate)
+	HypeMan.sendBotMessage('$SERVERNAME - New mission launched in the ' .. theatre .. '.  HypeMan standing by to stand by. Flight Logging Enabled, hold on to yo tits.  Local mission time is ' .. theTime .. ', ' .. theDate)
 end
 
 local function addFlightTime(flID)
-	if HypeManFlightLog[flID].departureTimer ~= nil then		
+	HypeMan.sendDebugMessage(' addFlightTime() called for ID: ' .. flID)
+	
+	if HypeManFlightLog[flID] == nil then
+		return
+	end
+	
+	if HypeManFlightLog[flID].departureTimer ~= nil then
 		HypeManFlightLog[flID].trackedTime = HypeManFlightLog[flID].trackedTime +  timer.getAbsTime() - HypeManFlightLog[flID].departureTimer
 		HypeManFlightLog[flID].departureTimer = nil -- set to nil to let other event handlers know that the time has been tracked
 	end
@@ -90,9 +96,14 @@ end
 
 
 local function sendFlightLog(flID)
+	
 	if HypeManFlightLog[flID].submitted ~= true then
+		HypeMan.sendDebugMessage(' sendFlightLog via UDP for ID: '..flID)	
 		HypeMan.sendBotTable(HypeManFlightLog[flID])
 		HypeManFlightLog[flID].submitted = true
+		HypeManFlightLog[flID].departureTimer = nil
+	else
+		HypeMan.sendDebugMessage(' sendFlightLog() called log for ID '.. ' but it was already submitted.  Disregard.')	
 	end
 end
 
@@ -128,27 +139,36 @@ local function flightLogNewEntry()
 	return elem
 end
 
-local function FlightLogCreateNewEntry(flID, flType, flAirfield, flAirStart, flCallsign, flCoalition)
+local function FlightLogCreateNewEntry(flID, flType, flAirStart, flCallsign, flCoalition)
 	-- this is a new entry to the flight log
 	
 	logEntry = flightLogNewEntry()
 
-	logEntry.callsign = flCallsign
+	local airStartNum = 0
+	if flAirStart then
+		airStartNum = 1
+	end
+	
 	logEntry.acType = flType
-	logEntry.departureField = flAirfield
-	logEntry.airStart = flAirStart
+	logEntry.airStart = airStartNum
+	logEntry.callsign = flCallsign	
 	logEntry.coalition = flCoalition
-	logEntry.numTakeoffs = 0
-
+	
+	if flAirStart then
+		logEntry.departureField = 'Air'
+	end
+	
 	HypeManFlightLog[flID] = logEntry
 end
 
 local function FlightLogDeparture(flID, flAirfield)
-
+	HypeMan.sendDebugMessage(' Flight Log Departure called.  ID: ' .. flID .. ' airfield: ' .. flAirfield)
 	if HypeManFlightLog[flID] == nil then
+		HypeMan.sendDebugMessage(' object ID was nil.  wtf is going on.')
 		return
 	end
 	
+	HypeManFlightLog[flID].departureField = flAirfield
 	HypeManFlightLog[flID].pending = false	
 	HypeManFlightLog[flID].numTakeoffs = HypeManFlightLog[flID].numTakeoffs + 1
 	HypeManFlightLog[flID].departureTimer = timer.getAbsTime()
@@ -232,9 +252,11 @@ local function HypeManTakeOffHandler(event)
 			if HypeManFlightLog[flID] == nil then
 				-- this check is here because AI units don't trigger an S_EVENT_BIRTH, but then will trigger a takeoff event.  It's handy to keep track of AI units
 				-- note that above the HypeManAnnounceAIPlanes check ensures we don't get here if we're not tracking AI planes
-				FlightLogCreateNewEntry(flID, acType, airfieldName, 0, name, event.initiator:getCoalition())
+				--FlightLogCreateNewEntry(flID, flType, flAirStart, flCallsign, flCoalition)
+				HypeMan.sendDebugMessage('FlightLogCreateEntry called inside S_EVENT_TAKEOFF called for object ID: ' .. flID)				
+				FlightLogCreateNewEntry(flID, acType, 0, name, event.initiator:getCoalition())
 			end
-			
+			HypeMan.sendDebugMessage('FlightLogDeparture called for object ID: ' .. flID)
 			FlightLogDeparture(flID, airfieldName)
 		end
 
@@ -275,6 +297,14 @@ local function HypeManLandingHandler(event)
 		local flID = Unit.getID(event.initiator)
 
 		if HypeManFlightLogging then
+			if HypeManFlightLog[flID] == nil then
+				-- this check is here because AI units don't trigger an b event but then will trigger a takeoff event.  It's handy to keep track of AI units
+				-- note that above the HypeManAnnounceAIPlanes check ensures we don't get here if we're not tracking AI planes
+				--FlightLogCreateNewEntry(flID, flType, flAirStart, flCallsign, flCoalition)
+				-- This is confusing we can assume that it was probably an air start AI if this code gets called.... set airstart to 1
+				FlightLogCreateNewEntry(flID, acType, 1, name, event.initiator:getCoalition())
+			end
+			
 			FlightLogArrival(flID, airfieldName)
 		end
 
@@ -282,7 +312,7 @@ local function HypeManLandingHandler(event)
 		local t = HypeManTakeOffTime[flID]
 		
 		if t == nil then
-			-- AI airstart unit does not trigger an S_EVENT_BIRTH
+			-- AI airstart unit does not trigger a b event
 			return
 		end
 
@@ -328,28 +358,29 @@ end
 
 local function HypeManBirthHandler(event)
 	if event.id == world.event.S_EVENT_BIRTH then
-
+		HypeMan.sendDebugMessage('S_EVENT_BIRTH called.  We are at the fucking top of the handler.') 
 		local statusflag, name = HypeManGetName(event.initiator)
 
 		if statusflag == false then
 			return
 		end
 
+		HypeMan.sendDebugMessage('S_EVENT_BIRTH called.  statusflag was not false.  i fucking hate you dcs.') 
+
 		if name == nil then
 			return
 		end
+		
+		HypeMan.sendDebugMessage('S_EVENT_BIRTH called.  statusflag was not false.  and name was not nil. i fucking hate you dcs.') 
 
 		-- changed to allow landing/flight time of airstart clients
 		-- HypeManTakeOffTime[Unit.getID(event.initiator)]=nil
-		HypeManTakeOffTime[Unit.getID(event.initiator)] = timer.getAbsTime()
+		local flID = Unit.getID(event.initiator)
+		HypeManTakeOffTime[flID] = timer.getAbsTime()
 
-		-- if a client has Air Started, then set their Flight Log Departure Airfield
-		if HypeManFlightLogging and event.initiator:getPlayerName() then
-			if event.initiator:inAir() == true then
-				-- ok, this calls a flight departure event
-				-- FlightLogCreateNewEntry(ID, type, airfield, airstart, callsign, coalition)
-				FlightLogCreateNewEntry(Unit.getID(event.initiator), Unit.getTypeName(event.initiator), 'Air', 1, name, event.initiator:getCoalition())
-			end
+		if HypeManFlightLogging then
+			HypeMan.sendDebugMessage('S_EVENT_BIRTH for object ID: ' .. flID) 
+			FlightLogCreateNewEntry(flID, Unit.getTypeName(event.initiator), event.initiator:inAir(), name, event.initiator:getCoalition())
 		end
 	end
 end

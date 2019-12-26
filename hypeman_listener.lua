@@ -303,28 +303,69 @@ local function getFlightLogCsvString(mylog)
 
 	flightHours = calcFlightHours(mylog)
 
+	print('callsign')
 	local my_string = wiq(mylog.callsign)
 	
+	print('flightHours')
 	my_string = my_string .. wiq( flightHours )
+	
+	print('acType')
 	my_string = my_string .. wiq( mylog.acType )
+	
+	print('numTakeoffs')
 	my_string = my_string .. wiq( mylog.numTakeoffs)
+	
+	print('numLandings')
 	my_string = my_string .. wiq( mylog.numLandings)
+	
+	print('departureField')
 	my_string = my_string .. wiq( mylog.departureField )
+	
+	print('arrivalField1')
 	my_string = my_string .. wiq( mylog.arrivalField1 )
+	
+	print('arrivalField2')
 	my_string = my_string .. wiq( mylog.arrivalField2 )
+	
+	print('coalition')
 	my_string = my_string .. wiq( mylog.coalition )
+	
+	print('missionType')
 	my_string = my_string .. wiq( mylog.missionType )
+	
+	print('ServerName')
 	my_string = my_string .. wiq( SERVERNAME )
+	
+	print('Osdate')
 	my_string = my_string .. wiq( os.date('%Y/%m/%d') )
+	
+	print('os time')
 	my_string = my_string .. wiq( os.date('%H:%M:%S') ) 
+	
+	print('theatre')
 	my_string = my_string .. wiq( mylog.theatre )
+	
+	print('dead')
 	my_string = my_string .. wiq( mylog.dead )
+	
+	print('crash')
 	my_string = my_string .. wiq( mylog.crash )
+	
+	print('ejected')
 	my_string = my_string .. wiq( mylog.ejected )
+	
+	print('refueled')
 	my_string = my_string .. wiq( mylog.refueled )
+	
+	print('humanfailure')
 	my_string = my_string .. wiq( mylog.humanFailure )
+	
+	print('airStart')
 	my_string = my_string .. wiq( mylog.airStart )
+	
+	print('missionEnd')
 	my_string = my_string .. wiq( mylog.missionEnd )
+	
 	return my_string
 end
 
@@ -401,7 +442,7 @@ local function f(msg)
 				local execString2 = 'trapsheet.bat'
 				os.execute(execString2)
 				
-				message.channel:send {
+				cqch:send {
 					file = "trapsheet.png",
 				}				
 			end
