@@ -97,7 +97,7 @@ end
 
 local function sendFlightLog(flID)
 	
-	if HypeManFlightLog[flID].pending then
+	if HypeManFlightLog[flID].pending and HypeManFlightLog[flID].submitted == false then
 		HypeMan.sendDebugMessage(' sendFlightLog via UDP for ID: '..flID)	
 		HypeMan.sendBotTable(HypeManFlightLog[flID])
 		-- the only place a submitted = false gets sent is on takeoffs
@@ -114,14 +114,10 @@ local function sendFlightLog(flID)
 end
 
 local function resetAfterSubmission(flID)
--- this function fills in an empty flight log entry with no details about the flight
-	-- ``elem = {}
-	--elem.messageType = 3 -- messageType = 3 for flight logging
+-- This function resets some of the tracked flight statistics after a flight log is submitted.  This allows handling the case
+-- when someone lands, and then takes off again after a few minutes on the ground or on the carrier.
 
-	-- NOTE - we do not RESET the submitted flag here.  The only way to get a 
-	-- resubmitted flag here is to takeoff again
-	--HypeManFlightLog[flID].submitted = false
-	HypeManFlightLog[flID].pending = false
+	--HypeManFlightLog[flID].pending = false
 	HypeManFlightLog[flID].trackedTime = 0
 	HypeManFlightLog[flID].numTakeoffs = 0
 	HypeManFlightLog[flID].numLandings = 0
@@ -137,7 +133,7 @@ local function resetAfterSubmission(flID)
 	HypeManFlightLog[flID].arrivalField2 = ''
 	HypeManFlightLog[flID].humanFailure = 0
 
-	-- Don't reset the ejected, dead, crash, missionEnd.
+	-- Don't reset the ejected, dead, crash, missionEnd.  If these happened to be set, then this UnitID won't be taking off again.
 	-- elem.ejected = 0
 	-- elem.dead = 0
 	-- elem.fired = 0
@@ -220,10 +216,10 @@ local function FlightLogDeparture(flID, flAirfield)
 		HypeManFlightLog[flID].departureField = flAirfield
 	end
 	
+	-- reset the pending flag here to false to stop the flight log from being submitted in the case where someone just landed
 	HypeManFlightLog[flID].pending = false
 	
-	-- reset submitted flag here when there is a takeoff. 
-	-- this is the only place where the submitted flag can be reset which opens up the flight log for resubmission again
+	-- the departure handler here is the only place where a flight log can be opened by changing a submitted flight log back to false
 	HypeManFlightLog[flID].submitted = false  
 	HypeManFlightLog[flID].numTakeoffs = HypeManFlightLog[flID].numTakeoffs + 1
 	HypeManFlightLog[flID].departureTimer = timer.getAbsTime()
@@ -479,7 +475,6 @@ local function HypeManPilotDeadHandler(event)
 
 			addFlightTime(flID)
 			
-			-- if HypeManFlightLog[flID].submitted == false and HypeManFlightLog[flID].pending == false then
 			if HypeManFlightLog[flID].pending == false then
 				HypeManFlightLog[flID].pending = true
 				timer.scheduleFunction(sendFlightLog, flID, timer.getTime() + HypeManFlightLogTimer )
@@ -517,8 +512,7 @@ local function HypeManCrashHandler(event)
 			HypeManFlightLog[flID].crash = 1
 
 			addFlightTime(flID)
-			
-			-- if HypeManFlightLog[flID].submitted == false and HypeManFlightLog[flID].pending == false then
+
 			if HypeManFlightLog[flID].pending == false then
 				HypeManFlightLog[flID].pending = true
 				timer.scheduleFunction(sendFlightLog, flID, timer.getTime() + HypeManFlightLogTimer )
@@ -558,7 +552,6 @@ local function HypeManPilotEjectHandler(event)
 
 			addFlightTime(flID)
 
-			-- if HypeManFlightLog[flID].submitted == false and HypeManFlightLog[flID].pending == false then
 			if HypeManFlightLog[flID].pending == false then
 				HypeManFlightLog[flID].pending = true
 				timer.scheduleFunction(sendFlightLog, flID, timer.getTime() + HypeManFlightLogTimer )
