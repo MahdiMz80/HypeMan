@@ -97,14 +97,56 @@ end
 
 local function sendFlightLog(flID)
 	
-	if HypeManFlightLog[flID].submitted ~= true then
+	if HypeManFlightLog[flID].pending then
 		HypeMan.sendDebugMessage(' sendFlightLog via UDP for ID: '..flID)	
 		HypeMan.sendBotTable(HypeManFlightLog[flID])
-		HypeManFlightLog[flID].submitted = true
-		HypeManFlightLog[flID].departureTimer = nil
+		-- the only place a submitted = false gets sent is on takeoffs
+		
+		HypeManFlightLog[flID].submitted = true 
+		HypeManFlightLog[flID].pending = false
+		
+		-- Once an entry has been submitted the flight logging stats for that row of the spreadsheet get reset
+		resetAfterSubmission(flID)
 	else
+		-- I don't think this code will ever get called now.  Once the flight log is submitted, that unit ID gets reset in the table now
 		HypeMan.sendDebugMessage(' sendFlightLog() called log for ID '.. ' but it was already submitted.  Disregard.')	
 	end
+end
+
+local function resetAfterSubmission(flID)
+-- this function fills in an empty flight log entry with no details about the flight
+	-- ``elem = {}
+	--elem.messageType = 3 -- messageType = 3 for flight logging
+
+	-- NOTE - we do not RESET the submitted flag here.  The only way to get a 
+	-- resubmitted flag here is to takeoff again
+	--HypeManFlightLog[flID].submitted = false
+	HypeManFlightLog[flID].pending = false
+	HypeManFlightLog[flID].trackedTime = 0
+	HypeManFlightLog[flID].numTakeoffs = 0
+	HypeManFlightLog[flID].numLandings = 0
+	HypeManFlightLog[flID].refueled = 0
+	-- elem.coalition = 0
+	
+	-- TODO - get missionType from the miz file, specifies the type of mission based on some convention
+	-- i.e. missionType = 1 = operational training, missionType = 2 = operational mission, etc.
+	-- elem.missionType = 0
+	HypeManFlightLog[flID].departureTimer = nil
+	HypeManFlightLog[flID].departureField = ''
+	HypeManFlightLog[flID].arrivalField1 = ''
+	HypeManFlightLog[flID].arrivalField2 = ''
+	HypeManFlightLog[flID].humanFailure = 0
+
+	-- Don't reset the ejected, dead, crash, missionEnd.
+	-- elem.ejected = 0
+	-- elem.dead = 0
+	-- elem.fired = 0
+	-- elem.crash = 0
+	-- elem.missionEnd = 0
+	
+	-- airStart can be reset.  The only way that it can be called again is with another BIRTH event
+	HypeManFlightLog[flID].airStart = 0
+	-- elem.theatre = env.mission.theatre
 end
 
 local function flightLogNewEntry()
@@ -119,6 +161,9 @@ local function flightLogNewEntry()
 	elem.numLandings = 0
 
 	elem.coalition = 0
+	
+	-- TODO - get missionType from the miz file, specifies the type of mission based on some convention
+	-- i.e. missionType = 1 = operational training, missionType = 2 = operational mission, etc.
 	elem.missionType = 0
 
 	elem.departureField = ''
@@ -144,6 +189,7 @@ local function FlightLogCreateNewEntry(flID, flType, flAirStart, flCallsign, flC
 	
 	logEntry = flightLogNewEntry()
 
+	-- convert the bool airstart flag to a number for adding to the stats table
 	local airStartNum = 0
 	if flAirStart then
 		airStartNum = 1
@@ -164,12 +210,21 @@ end
 local function FlightLogDeparture(flID, flAirfield)
 	HypeMan.sendDebugMessage(' Flight Log Departure called.  ID: ' .. flID .. ' airfield: ' .. flAirfield)
 	if HypeManFlightLog[flID] == nil then
-		HypeMan.sendDebugMessage(' object ID was nil.  wtf is going on.')
+		HypeMan.sendDebugMessage(' object ID was nil...')
 		return
 	end
 	
-	HypeManFlightLog[flID].departureField = flAirfield
-	HypeManFlightLog[flID].pending = false	
+	-- only fill in the departure field if it was empty.  For air starts it should be Air.  If it's empty
+	-- then they haven't taken off yet, or the log was submitted and it was reset
+	if HypeManFlightLog[flID].departureField == '' then
+		HypeManFlightLog[flID].departureField = flAirfield
+	end
+	
+	HypeManFlightLog[flID].pending = false
+	
+	-- reset submitted flag here when there is a takeoff. 
+	-- this is the only place where the submitted flag can be reset which opens up the flight log for resubmission again
+	HypeManFlightLog[flID].submitted = false  
 	HypeManFlightLog[flID].numTakeoffs = HypeManFlightLog[flID].numTakeoffs + 1
 	HypeManFlightLog[flID].departureTimer = timer.getAbsTime()
 end
@@ -194,7 +249,10 @@ local function FlightLogArrival(flID, flAirfield)
 
 	HypeManFlightLog[flID].numLandings = HypeManFlightLog[flID].numLandings + 1
 
-	-- after the specified time submit the flight log
+	-- Every landing prepare to send the flight log by starting a callback timer that sends the flight log a certain time
+	-- in the future
+	-- the other ways that the flight log will be sent:
+	-- dead, eject, crash
 	HypeManFlightLog[flID].pending = true
 	timer.scheduleFunction(sendFlightLog, flID, timer.getTime() + HypeManFlightLogTimer )
 end
@@ -250,12 +308,11 @@ local function HypeManTakeOffHandler(event)
 
 		if HypeManFlightLogging then
 			if HypeManFlightLog[flID] == nil then
-				-- this check is here because AI units don't trigger an S_EVENT_BIRTH, but then will trigger a takeoff event.  It's handy to keep track of AI units
-				-- note that above the HypeManAnnounceAIPlanes check ensures we don't get here if we're not tracking AI planes
-				--FlightLogCreateNewEntry(flID, flType, flAirStart, flCallsign, flCoalition)
+				-- If the object to be tracked doesn't exist yet then create a new entry for it
 				HypeMan.sendDebugMessage('FlightLogCreateEntry called inside S_EVENT_TAKEOFF called for object ID: ' .. flID)				
-				FlightLogCreateNewEntry(flID, acType, 0, name, event.initiator:getCoalition())
+				FlightLogCreateNewEntry(flID, acType, event.initiator:inAir(), name, event.initiator:getCoalition())
 			end
+			
 			HypeMan.sendDebugMessage('FlightLogDeparture called for object ID: ' .. flID)
 			FlightLogDeparture(flID, airfieldName)
 		end
@@ -283,6 +340,9 @@ local function HypeManLandingHandler(event)
 			return
 		end
 
+		-- wrapping the airfield name in a pcall here because it seems helicopters or planes landing at different places, like not on a field
+		-- won't trigger this.
+		-- TODO : what happens with a field, roadside or farp landing?
 		local statusflag2, airfieldName = pcall(Airbase.getName, event.place)
 
 		if statusflag2 == false then
@@ -298,11 +358,10 @@ local function HypeManLandingHandler(event)
 
 		if HypeManFlightLogging then
 			if HypeManFlightLog[flID] == nil then
-				-- this check is here because AI units don't trigger an b event but then will trigger a takeoff event.  It's handy to keep track of AI units
+				-- this check is here because AI units don't trigger an birth event, but then will trigger a landing event
 				-- note that above the HypeManAnnounceAIPlanes check ensures we don't get here if we're not tracking AI planes
-				--FlightLogCreateNewEntry(flID, flType, flAirStart, flCallsign, flCoalition)
-				-- This is confusing we can assume that it was probably an air start AI if this code gets called.... set airstart to 1
-				FlightLogCreateNewEntry(flID, acType, 1, name, event.initiator:getCoalition())
+				-- set the air start flag to 1 here
+				FlightLogCreateNewEntry(flID, Unit.getTypeName(event.initiator), 1, name, event.initiator:getCoalition())
 			end
 			
 			FlightLogArrival(flID, airfieldName)
@@ -420,7 +479,8 @@ local function HypeManPilotDeadHandler(event)
 
 			addFlightTime(flID)
 			
-			if HypeManFlightLog[flID].submitted == false and HypeManFlightLog[flID].pending == false then
+			-- if HypeManFlightLog[flID].submitted == false and HypeManFlightLog[flID].pending == false then
+			if HypeManFlightLog[flID].pending == false then
 				HypeManFlightLog[flID].pending = true
 				timer.scheduleFunction(sendFlightLog, flID, timer.getTime() + HypeManFlightLogTimer )
 			end
@@ -458,7 +518,8 @@ local function HypeManCrashHandler(event)
 
 			addFlightTime(flID)
 			
-			if HypeManFlightLog[flID].submitted == false and HypeManFlightLog[flID].pending == false then
+			-- if HypeManFlightLog[flID].submitted == false and HypeManFlightLog[flID].pending == false then
+			if HypeManFlightLog[flID].pending == false then
 				HypeManFlightLog[flID].pending = true
 				timer.scheduleFunction(sendFlightLog, flID, timer.getTime() + HypeManFlightLogTimer )
 			end
@@ -497,7 +558,8 @@ local function HypeManPilotEjectHandler(event)
 
 			addFlightTime(flID)
 
-			if HypeManFlightLog[flID].submitted == false and HypeManFlightLog[flID].pending == false then
+			-- if HypeManFlightLog[flID].submitted == false and HypeManFlightLog[flID].pending == false then
+			if HypeManFlightLog[flID].pending == false then
 				HypeManFlightLog[flID].pending = true
 				timer.scheduleFunction(sendFlightLog, flID, timer.getTime() + HypeManFlightLogTimer )
 			end
