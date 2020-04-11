@@ -35,12 +35,13 @@ def GetServerIP(hostname):
 		return "Unable to get IP address" 
 
 
-def doHost(servername, hostname):
+def doHost(servername, hostname, dcsport):
 	serverIP = GetServerIP(hostname)
 	dcsStatus = "DOWN"
 	srsStatus = "DOWN"
 	LotATCStatus = "DOWN"	
-	if checkHost(hostname, 10308, retry, delay, timeout):
+    
+	if checkHost(hostname, dcsport, retry, delay, timeout):
 		dcsStatus = "UP"
 		
 	if checkHost(hostname, 5002, retry, delay, timeout):
@@ -49,10 +50,11 @@ def doHost(servername, hostname):
 	if checkHost(hostname, 10310, retry, delay, timeout):
 		LotATCStatus = "UP"
 		
-	print(servername + ", hostname: " + hostname + ", ip: " + serverIP + ", DCS: " + dcsStatus + ", SRS: " + srsStatus + ", LotATC: " + LotATCStatus)
+	print(servername + ", hostname: " + hostname + ", ip: " + serverIP + ", DCS (" + str(dcsport) + "): " + dcsStatus + ", SRS: " + srsStatus + ", LotATC: " + LotATCStatus)
 	
-if __name__ == "__main__":	
-	doHost('JOW East','jow2.aggressors.ca')
-	doHost('JOW West','jow.aggressors.ca')
+if __name__ == "__main__":
+    doHost('JOW Able', 'able.aggressors.ca', 10318)
+    doHost('JOW Easy','easy.aggressors.ca', 10308)
+    doHost('JOW Whiskey','whiskey.aggressors.ca', 10308)
 
 	
