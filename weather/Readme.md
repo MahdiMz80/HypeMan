@@ -30,6 +30,8 @@ The weather stations to use are hard coded inside weather_select_caucasus.bat.  
 SET PRIMARY_AIRPORT=URSS 
 SET BACKUP_AIRPORT=UGSB
 ```
+### 7-zip
+You will need 7-zip installed, edit the .bat file to make sure that the location of 7-zip matches your system.
 
 ### Checkwx.com API key
 You will need an API key from www.checkwx.com.  Sign up for a free account and you will be given an API key and modify *dcs_weather2.py* with this private API key.  For example:
