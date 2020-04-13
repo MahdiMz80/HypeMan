@@ -57,5 +57,8 @@ The US Navy has extensive experience performing aircraft recover operations with
 Yes, the struggle is real.  
 
 # Common METAR Weather Stations
-URSS Sochi - https://www.checkwx.com/weather/URSS/metar
-UGSB Batumi - https://www.checkwx.com/weather/UGSB/metar
+URSS Sochi (Caucasus) - https://www.checkwx.com/weather/URSS/metar
+
+UGSB Batumi (Caucasus) - https://www.checkwx.com/weather/UGSB/metar
+
+OMAD Bateen (Persian Gulf) - https://www.checkwx.com/weather/OMAD/metar
