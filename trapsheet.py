@@ -1,3 +1,6 @@
+# README
+# YOU NEED TO SET THIS TRAPSHEET FOLDER VARIABLE TO POINT TO THE FOLDER OF
+# THE TRAPSHEETS. 
 from pathlib import Path
 import csv
 import numpy as np
@@ -7,10 +10,44 @@ from matplotlib.offsetbox import (TextArea, DrawingArea, OffsetImage,
 from matplotlib.patches import Circle
 import matplotlib
 import matplotlib.patches as patches
-import cv2
+#import cv2
 import datetime
+import os
+import math
+import time
+import stat
+
+
+    
+#%%
+#trapfolder = 'C:/python_code/bm/trapsheets'
+#trapfolder = 'C:/FlightSimDocs/JOW/stats/SLModStats/LSO'
+trapfolder = 'C:/HypeMan/'
+#trapfolder = 'C:/Users/DCSAdmin/Saved Games/DCS.openbeta_server'
+#trapfolder = 'C:/Users/jow/Saved Games/DCS.openbeta_server'
+#trapfolder = 'C:/temp'
 
 #%%
+def getTypeFromFilename(filename):
+    # Given the filename of a trapsheet determine the aircraft type.
+    # for now only F18 or F14
+    # AIRBOSS-CVN71_Trapsheet-Vexx VFA146_FA-18C_hornet-0069.csv
+    # AIRBOSS-CVN71_Trapsheet-zZz Man 157th_F-14B-0001.csv
+    # returns 1 on an F-18C
+    # returns 2 on F-14
+    
+    ff = os.path.basename(filename)
+    
+    if ff.find('FA-18C') != -1:
+        print('AC type was FA-18C')
+        return 1
+    
+    if ff.find('F-14B') != -1:
+        print('AC type was AV-8B')
+        return 2
+    
+    return -1
+    
 def ReadTrapsheet(filename):
     # read a trap sheet into a dictionary as numpy arrays
     d={}
@@ -181,7 +218,7 @@ def plotTrapsheet(ts, pinfo):
 #                        arrowprops=dict(arrowstyle="->"))
     carrier01 = plt.imread('boat03.png')  
    # ax.add_artist(ab)
-    ax.figure.figimage(carrier01, 1000, 350, alpha=.45, zorder=1)
+    ax.figure.figimage(carrier01, 1000, 343, alpha=.45, zorder=1)
     
     carrier02 = plt.imread('boat05.png')  
     ax.figure.figimage(carrier02, 1000, 567, alpha=.45, zorder=1)
@@ -230,16 +267,30 @@ def plotTrapsheet(ts, pinfo):
     maxvalue = np.max(ts['AoA'][:-num_aoa])
     minvalue = np.min(ts['AoA'][:-num_aoa])
     
+    if pinfo['acType'] == 1:
+        if maxvalue < 10 and minvalue > 6:
+            maxvalue = 10.01
+            minvalue = 5.99
     
-    if maxvalue < 10 and minvalue > 6:
-        maxvalue = 10.01
-        minvalue = 5.99
-    
-    if maxvalue > 10 and minvalue > 6:
-        minvalue = 3.99
+        if maxvalue > 10 and minvalue > 6:
+            minvalue = 3.99
     #if minvalue > 5.01:
     #    minvalue = 5.01
         
+
+    if pinfo['acType']==2:
+        maxvalue = math.ceil(maxvalue)+1
+        minvalue = math.floor(minvalue)-1
+#        if minvalue > 9 and pinfo['acType'] == 2:
+#            minvalue = 9
+#                        
+#        if minvalue > 8 and pinfo['acType'] == 2:
+#            minvalue = 8
+#            
+#        if minvalue > 7 and pinfo['acType'] == 2:
+#            minvalue = 7
+        
+    
     print('Max value: ',maxvalue)
     print('Min value: ',minvalue)    
     ax.set_ylim([minvalue,maxvalue])
@@ -250,8 +301,14 @@ def plotTrapsheet(ts, pinfo):
    
     stralph = 'α'
     stralph = 'AoA'
-    #ax.text(1.1535,10.4,stralph,color='g',fontsize=22,alpha=0.3)    
-    ax.text(xpoint,10.2,stralph,color=labelcolor,fontsize=xpointsize,alpha=0.5)
+    #ax.text(1.1535,10.4,stralph,color='g',fontsize=22,alpha=0.3)   
+    
+    aoa_text_pos = 10.2
+    if pinfo['acType']==2:
+        aoa_text_pos=12.6
+        
+    ax.text(xpoint,aoa_text_pos,stralph,color=labelcolor,fontsize=xpointsize,alpha=0.5)
+    
     
     
     # 6.3 6.9 7.4 8.1 8.8 9.3 9.8
@@ -279,8 +336,14 @@ def plotTrapsheet(ts, pinfo):
     if xmax > 1.2:
         xmax = 1.2
    
-    ax.plot([0,xmax],[8.8,8.8],'g-',linewidth=1.2,alpha=0.8,linestyle='--')
-    ax.plot([0,xmax],[7.4,7.4],'g-',linewidth=1.2,alpha=0.8,linestyle='--')    
+    if pinfo['acType'] == 1:        
+        ax.plot([0,xmax],[8.8,8.8],'g-',linewidth=1.2,alpha=0.8,linestyle='--')
+        ax.plot([0,xmax],[7.4,7.4],'g-',linewidth=1.2,alpha=0.8,linestyle='--')
+    
+    if pinfo['acType'] == 2:
+        ax.plot([0,xmax],[9.9,9.9],'g-',linewidth=1.2,alpha=0.8,linestyle='--')
+        ax.plot([0,xmax],[10.8,10.8],'g-',linewidth=1.2,alpha=0.8,linestyle='--')        
+        
     ax.plot(xy[0][:-num_aoa],ts['AoA'][:-num_aoa], 'g-', linewidth=16, alpha=0.1) 
     ax.plot(xy[0][:-num_aoa],ts['AoA'][:-num_aoa], 'g-', linewidth=10, alpha=0.1) 
     ax.plot(xy[0][:-num_aoa],ts['AoA'][:-num_aoa], 'g-', linewidth=6, alpha=0.15) 
@@ -296,8 +359,7 @@ def plotTrapsheet(ts, pinfo):
     ax.spines['bottom'].set_color(spinecolor)
     #ax.grid(which='minor', alpha=0.2)
     #ax.grid(which='major', alpha=0.5)
-    
-    
+        
     ax.set_xlim([0.001,xmax]) 
     ax.invert_xaxis()
     plt.show()    
@@ -356,10 +418,12 @@ def parseFilename(vinput):
         print('contains hornet')
         ps = ps.replace(hornet,'')
         pinfo['aircraft']='F/A-18C'
+        pinfo['acType']=1
     elif tomcat in ps:
         print('contains tomcat')
         ps = ps.replace(tomcat,'')
         pinfo['aircraft']='F-14B'
+        pinfo['acType']=2
     else:
         print('unknown aircraft.')
 
@@ -369,30 +433,33 @@ def parseFilename(vinput):
     return pinfo
 def getCallsign(input):
     print('Getting callsign from: ', input)
-    
-#%%
-trapfolder = 'C:/python_code/bm/trapsheets'
-trapfolder = 'C:/FlightSimDocs/JOW/stats/SLModStats/LSO'
-trapfolder = 'C:/HypeMan/trapsheets'
-trapfolder = 'C:/Users/DCSAdmin/Saved Games/DCS.openbeta_server'
-#trapfolder = 'C:/temp'
+
+def file_age_in_seconds(pathname):
+    return time.time() - os.stat(pathname)[stat.ST_MTIME]
+
 p = Path(str(trapfolder))
-
-
-#print('Latest path: ', latest_path)
 
 trapfile = getRecentTrapsheet(trapfolder)
 
-print('Final file is:', trapfile)
+fileage = file_age_in_seconds(trapfile)
 
-#trapfile = '../trapsheets/AIRBOSS-CVN74_Trapsheet-PyCo00_F-14B-0008.csv'
-#trapfile = '../trapsheets/AIRBOSS-CVN74_Trapsheet-Vexx_FA-18C_hornet-0191.csv'
-#trapfile = '../trapsheets/AIRBOSS-CVN74_Trapsheet-DG_441_FA-18C_hornet-0042.csv'
+print('File age is: ' + str(fileage))
 
-pinfo = parseFilename(trapfile)
-
-ts = ReadTrapsheet(trapfile)
-plotTrapsheet(ts, pinfo)
-
-# %% this is a cell here
-print('Grade: ', ts['Grade'], ' Points: ', ts['Points'][-1], ' Details: ', ts['Details'])
+if fileage < 15:    
+    #acType = getTypeFromFilename(trapfile)    
+    print('Final file is:', trapfile)
+    
+    #trapfile = '../trapsheets/AIRBOSS-CVN74_Trapsheet-PyCo00_F-14B-0008.csv'
+    #trapfile = '../trapsheets/AIRBOSS-CVN74_Trapsheet-Vexx_FA-18C_hornet-0191.csv'
+    #trapfile = '../trapsheets/AIRBOSS-CVN74_Trapsheet-DG_441_FA-18C_hornet-0042.csv'
+    
+    pinfo = parseFilename(trapfile)
+    
+    ts = ReadTrapsheet(trapfile)
+    plotTrapsheet(ts, pinfo)
+    
+    print('Grade: ', ts['Grade'], ' Points: ', ts['Points'][-1], ' Details: ', ts['Details'])
+else:    
+    print('Trapsheet is stale, not plotting and not generating a plot sheet.  Old one will remain there.')
+   # if os.path.exists('trapsheet.png'):
+        #os.remove('trapsheet.png')
