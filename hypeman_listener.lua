@@ -1,5 +1,9 @@
+-- TODO: write documentation and installation instructions
 
 local string = require('string') -- load standard string library included with lua
+local fs = require('fs')
+local trapsheetTimeout = 15
+
 JSON = (loadfile "JSON.lua")() -- one-time load of JSON
 
 dofile('private_api_keys.lua')
@@ -31,6 +35,9 @@ local privmsgid = PRIVATE_COMMAND_ID
 local announce_hypeman_start = false
 local PORT =  10081
 local HOST = '0.0.0.0'
+
+local infoPort = 65001
+local infoHost = '127.0.0.1'
 
 local dgram = require('dgram')
 local discordia = require('discordia')
@@ -74,9 +81,25 @@ end)
 --    return false
 --end
 
+-- dgram = require('dgram')
+infoSocket = dgram.createSocket("udp4")
+infoSocket:bind(0,infoHost)
+--infoSocket:send("Test ".. os.date(), 64999, "localhost", function(err) 
+--  socket:close()
+--end)
+
 client:on('messageCreate', function(message)	
 	
---	if message.content == '!connect' and message.author.id == privmsgid and message.channel.guild == nil then	
+	--if message.content == '!missiontime' and message.author.id == privmsgid and message.channel.guild == nil then	
+--if message.content == '!missiontime' and message.author.id == privmsgid and message.channel.guild == nil then	
+	if message.content == '!missiontime' then	
+	
+		message.channel:send('mission time command receceived.')
+		infoSocket:send('This message was received inside DCS.', infoPort, infoHost)
+--, function(err) 
+		--infoSocket:close()
+		--end)		
+	end	
 --		print('Message was !connect received')
 --		message.channel:send('connecting to voice comms.')
 --		ConnectVoice()
@@ -109,6 +132,9 @@ local s2 = dgram.createSocket('udp4')
 
 p('PORT',PORT)
 s2:bind(PORT,HOST)
+
+
+
 
 -- local s1 = dgram.createSocket('udp4')
 -- s1:bind(PORT,HOST)
@@ -303,67 +329,67 @@ local function getFlightLogCsvString(mylog)
 
 	flightHours = calcFlightHours(mylog)
 
-	print('callsign')
+--	print('callsign')
 	local my_string = wiq(mylog.callsign)
 	
-	print('flightHours')
+--	print('flightHours')
 	my_string = my_string .. wiq( flightHours )
 	
-	print('acType')
+--	print('acType')
 	my_string = my_string .. wiq( mylog.acType )
 	
-	print('numTakeoffs')
+--	print('numTakeoffs')
 	my_string = my_string .. wiq( mylog.numTakeoffs)
 	
-	print('numLandings')
+--	print('numLandings')
 	my_string = my_string .. wiq( mylog.numLandings)
 	
-	print('departureField')
+--	print('departureField')
 	my_string = my_string .. wiq( mylog.departureField )
 	
-	print('arrivalField1')
+--	print('arrivalField1')
 	my_string = my_string .. wiq( mylog.arrivalField1 )
 	
-	print('arrivalField2')
+--	print('arrivalField2')
 	my_string = my_string .. wiq( mylog.arrivalField2 )
 	
-	print('coalition')
+--	print('coalition')
 	my_string = my_string .. wiq( mylog.coalition )
 	
-	print('missionType')
+--	print('missionType')
 	my_string = my_string .. wiq( mylog.missionType )
 	
-	print('ServerName')
+--	print('ServerName')
 	my_string = my_string .. wiq( SERVERNAME )
 	
-	print('Osdate')
+--	print('Osdate')
 	my_string = my_string .. wiq( os.date('%Y/%m/%d') )
 	
-	print('os time')
+--	print('os time')
 	my_string = my_string .. wiq( os.date('%H:%M:%S') ) 
 	
-	print('theatre')
+--	print('theatre')
 	my_string = my_string .. wiq( mylog.theatre )
 	
-	print('dead')
+--	print('dead')
 	my_string = my_string .. wiq( mylog.dead )
 	
-	print('crash')
+--	print('crash')
 	my_string = my_string .. wiq( mylog.crash )
 	
-	print('ejected')
+--	print('ejected')
 	my_string = my_string .. wiq( mylog.ejected )
 	
-	print('refueled')
+--	print('refueled')
 	my_string = my_string .. wiq( mylog.refueled )
 	
-	print('humanfailure')
+--	print('humanfailure')
 	my_string = my_string .. wiq( mylog.humanFailure )
 	
-	print('airStart')
+--	print('airStart')
 	my_string = my_string .. wiq( mylog.airStart )
 	
-	print('missionEnd')
+--	print('missionEnd')
 	my_string = my_string .. wiq( mylog.missionEnd )
 	
 	return my_string
@@ -404,8 +430,42 @@ local function savetxt ( t )
    file:close()
 end
 
-local function f(msg)
+data = ''
 
+  --- Function that saves data to file
+  local function saveExportFile(filename, data)
+    local f = io.open(filename, "wb")
+    if f then
+      f:write(data)
+      f:close()
+    else
+      print(string.format("ERROR: could not save rane export to file %s.\nFile may contain invalid characters.", tostring(filename)))
+    end
+  end
+  
+local function sendTrapsheet(err, stat)
+	if err == nil then
+		local t_secs = os.time() 
+		local t_file = stat.mtime.sec
+		local t = t_secs - t_file
+		trapAge = t
+		
+		if t < trapsheetTimeout then
+			print('Trapsheet fresh enough, sending.')
+				cqch:send {
+					file = "trapsheet.png",
+				}				
+		else
+			print('Trapsheet stale, not sending.')
+		end			
+	end
+end
+  
+local function f(msg)
+	
+	if msg == nil or msg == '' then
+		return
+	end
 	local lua_table = JSON:decode(msg)
 	savetxt(msg)
 	if lua_table['messageType']  ~= nil then
@@ -420,8 +480,9 @@ local function f(msg)
 				
 				if msg_string ~= nil then
 					ch:send(msg_string)
+					print(msg_string)
 				end
-			end
+			end				
 	
 		elseif msg_id == 2 then
 			-- AIRBOSS GRADE IS messageType = 2			
@@ -431,20 +492,23 @@ local function f(msg)
 				
 				lua_table = defaultGrade(lua_table)		
 				local msg_string = getGradeString(lua_table)
-				print(msg_string)
+				print("Message Received:\n" .. msg_string)
 				--cqch:send(msg)
 				cqch:send(msg_string)
+				print(msg_string)
 				local msg2 = getCsvString(lua_table)
 				local execString = "\".\\gsheet_upload.bat " .. "\"" .. msg2 .. "\"\""
 				print(execString)
 				io.popen(execString,'w')
 				
 				local execString2 = 'trapsheet.bat'
-				os.execute(execString2)
+				os.execute(execString2)				
 				
-				cqch:send {
-					file = "trapsheet.png",
-				}				
+				fs.stat('trapsheet.png', sendTrapsheet)
+				
+--				cqch:send {
+					-- file = "trapsheet.png",
+				--}				
 			end
 
 		elseif msg_id == 3 then
@@ -460,10 +524,40 @@ local function f(msg)
 			--savetxt ( msg3 )			
 			
 		elseif msg_id == 4 then
-			-- WEAPON RELEASE MESSAGE?
+			-- RANGE EXPORT MESSAGE
+			local msg_string = lua_table['messageString']
 			
-		elseif msg_id == 5 then
-			-- HIT OR DAMAGE MESSAGE?
+			if msg_string then
+				print(msg_string)			
+			end
+			
+			local cmd = lua_table.cmd
+			if cmd == 0 then
+				-- this is the stop message to stop the file writing
+				print('HYPEMAN_LISTENER STOP RECORDING.')
+				saveExportFile("test_output.dat", data)
+			elseif cmd == 1 then
+				-- this is the start message to start writing the thing to file
+				print('HYPEMAN_LISTENER START RECORDING.')
+				data = ''
+			elseif cmd == 2 then
+				-- Position update of the target
+				local pos = lua_table["p"];					
+				data = data..string.format("%s,%.2f,%.2f,%.2f\n",lua_table.id, pos.x,pos.y,pos.z)
+				
+			elseif cmd == 3 then
+				-- this was a bullet
+				
+				local pos = lua_table["p"];					
+				data = data..string.format("%s,%.2f,%.2f,%.2f\n",lua_table.id, pos.x,pos.y,pos.z)
+				-- data=data..string.format("%.2f,%.3f,%.1f,%.1f,%.1f,%.2f,%.2f,%.2f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%s,%s,%.1f,%s\n",t,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q)				
+				-- print('.')
+			end
+			
+			
+		elseif msg_id == 99 then
+			print('DEBUG: ' .. lua_table.messageString)
+			-- DEBUG MESSAGE
 		end
 	end
 
@@ -476,8 +570,8 @@ end
 			
 s2:on('message', function(msg, rinfo)
 	-- local t = os.date()	
-    p('Message received: ')
-    p(msg)
+    --p('Message received: ')
+    --p(msg)
     
     if ch ~= nil then
 		botSendMessage = coroutine.wrap (f)
