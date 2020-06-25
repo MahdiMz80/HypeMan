@@ -9,9 +9,16 @@ from matplotlib.font_manager import FontProperties
 import numpy as np
 import statistics
 
+import sys, getopt
+
 
 from oauth2client.service_account import ServiceAccountCredentials
 #from datetime import datetime
+#print ('Number of arguments:', len(sys.argv), 'arguments.')
+#print ('Argument List:', str(sys.argv))
+#if len(sys.argv)== 2:
+#    print('Argument Number 2: ', str(sys.argv[1])) 
+
 
 def updateDatabase(path):
     
@@ -67,22 +74,24 @@ def calculateGradeQual(curList, grade0):
         return float(-1.0)    
     
 def calculateGradeCivilian(curList, grade0):
-    grade = grade0
+    
     pt = float(-1.0)
     x = 0
     for i in curList:
         try:
-            pt = float(i['points'])
+            tmp = float(i['points'])
+            if tmp > pt:
+                pt = tmp
         except:
             x=0
-            
-        if pt >= 0.0:
-            #print('(UNQUAL) highest score for ', i['pilot'], ' as ', pt)
-            #grade['points']=pt
-            return pt
-        else:
-            #print('No finalscore for ', i['pilot'])
-            return 0.0
+          
+    if pt >= 0.0:
+        #print('(UNQUAL) highest score for ', i['pilot'], ' as ', pt)
+        #grade['finalscore']=pt
+        return pt
+    else:
+        #print('No finalscore for ', i['pilot'])
+        return 0.0
            
             
 def calculateGrade(curList, grade0):
@@ -99,7 +108,7 @@ def calculatePilotRow(data, name, grade0):
     
     uniqueDates = []
     for i in reversed(data):
-        grade = grade0
+        #grade = grade0
         if name == i['pilot']:
             if i['ServerDate'] not in uniqueDates:
                 uniqueDates.append(i['ServerDate'])
@@ -139,7 +148,33 @@ with open('data.txt') as json_file:
  
 grade0={}; grade0['color']='white'; grade0['score']=0.0; grade0['symbol']='x'; grade0['grade']='--'
     
+airframe = ''
+
+if len(sys.argv)== 2:
+    print('Argument Number 2: ', str(sys.argv[1])) 
+
+    if str(sys.argv[1]) == 'turkey':
+        airframe = 'F-14B'
+    elif str(sys.argv[1]) == 'hornet':    
+        airframe = 'FA-18C_hornet'
+
+print('size of data array: ' , str(len(data)))
+count = 0
+if airframe != '':
+    data2 = []
+    for i in data:
+        # if i['airframe']
+        if i['airframe'] == airframe:
+            data2.append(i)
+            # print('Deleting airframe: ', i['airframe'], ' was looking for: ' , airframe)
+            # data.remove(i)
+            count = count + 1
+
+print('Number of rows removed: ', str(count))
+
+data = data2
 pilots = []
+
 
 pilotRows = []
 pilotDict = {}
@@ -160,6 +195,9 @@ for i in pilotRows:
     if len(i) > maxLength:
         maxLength = len(i)
     
+   
+if maxLength < 17:
+    maxLength = 17
     
 fig = plt.figure(dpi=150)
 ax = fig.add_subplot(1,1,1)
@@ -176,16 +214,26 @@ n_cols = maxLength+2
 n_rows = len(pilots)+1
 width, height = 100 / n_cols, 100.0 / n_rows
 anchor='⚓'
+goldstar = '⭐'
+goldstar = '★'
 #unicorn='✈️'
 blankcell='#1A392A'
-colors=['red','orange','orange','yellow','lightgreen']
- 
+
+#colors=['red','orange','orange','yellow','lightgreen']  #078a21
+#colors=['#a00000','#835C3B','#d17a00','#b6c700','#0bab35','#057718','#057718']
+colors=['#a00000','#d17a00','#d17a00','#b6c700','#0bab35','#057718','#057718']
+        
+redcolor = '#a00000'
+browncolor = '#835C3B'
+orangecolor = '#d17a00'
+yellowcolor = '#b6c700'
+greencolor = '#0bab35'
 
 minDate = data[-1]['ServerDate']
 maxDate = data[0]['ServerDate']
 textcolor = '#FFFFF0'
 edgecolor = '#708090'
-cell = tb.add_cell(0,0,3*width,height,text='Callsign',loc='center',facecolor=blankcell) #edgecolor='none'
+cell = tb.add_cell(0,0,4*width,height,text='Callsign',loc='center',facecolor=blankcell) #edgecolor='none'
 cell.get_text().set_color(textcolor)
 cell.set_text_props(fontproperties=FontProperties(weight='bold',size=8))   
 cell.set_edgecolor(edgecolor)
@@ -217,41 +265,71 @@ for col_idx in range(2,maxLength+2):
 #cell.set_text_props(family='')
 
 
-
-
 titlestr = 'JOW Greenie Board ' + minDate + ' to ' + maxDate
-for p_idx in range(0,len(pilots)):
+
+minRows = len(pilots)
+
+if minRows < 12: 
+    minRows = 12
+    
+#for p_idx in range(0,len(pilots)):
+for p_idx in range(0,minRows):
     row_idx = p_idx+1
-    cell = tb.add_cell(row_idx,0,3*width,height,text=pilots[p_idx],loc='center',facecolor=blankcell,edgecolor='blue') #edgecolor='none'    
+   
+    rd = []
+    name = ''
+    scoreText = ''
+    
+    if p_idx < len(pilots):
+        name = pilots[p_idx]
+        rd = pilotDict[name]
+        avg = statistics.mean(rd)
+        scoreText = round(avg,1)
+        if name.lower() == 'eese':
+            name = "SippyCup"    
+
+            
+    cell = tb.add_cell(row_idx,0,4*width,height,text=name,loc='center',facecolor=blankcell,edgecolor='blue') #edgecolor='none'    
     cell.get_text().set_color(textcolor)
     cell.set_text_props(fontproperties=FontProperties(weight='bold',size="7.5"))
     cell.set_edgecolor(edgecolor)
-    name = pilots[p_idx];
-    rd = pilotDict[name]
-    avg = statistics.mean(rd)
-    cell = tb.add_cell(row_idx,1,width,height,text=round(avg,1),loc='center',facecolor=blankcell)
+#    name = pilots[p_idx];
+
+    
+    cell = tb.add_cell(row_idx,1,width,height,text=scoreText,loc='center',facecolor=blankcell)
     cell.get_text().set_color(textcolor)
     cell.set_text_props(fontproperties=FontProperties(weight='bold',size="7.4"))
     cell.set_edgecolor(edgecolor)
     col_idx = 2
+        
     for g in rd:
         
         text = ''
-        if g == 0:
-            color=colors[0]
-        elif g > 0 and g < 1:
-            color=colors[1]
-        elif g >=1 and g < 2:
-            color=colors[2]
-        elif g >=2 and g < 3:
-            color = colors[3]
-        elif g >=3:
-            color = colors[4]
+        
+        if g == 0:             
+            color=redcolor  
+        elif g == 1:
+            color=browncolor
+        elif g== 1.5:
+            color=browncolor
+        elif g == 2:
+            color=orangecolor
+        elif g == 2.5:
+            color=orangecolor
+        elif g == 3:
+            color = yellowcolor
+        elif g == 4:
+            color = greencolor 
+        elif g == 5:
+            text = anchor
+            color = greencolor
         else:
             color = blankcell
                     
-        if g > 4.5:
-            text=anchor    
+            # elif g >= 5.0:
+           #     text = anchor
+           #     color = colors[6]  
+               
                     
         cell = tb.add_cell(row_idx,col_idx,width,height,text=text,loc='center',facecolor=color) #edgecolor='none'  
         cell.get_text().set_color('#333412')

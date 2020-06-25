@@ -33,18 +33,24 @@ client:on('messageCreate', function(message)
 		local final_string = 'server_info.bat'
 		os.execute(final_string)
 		local str = readAll('server_info.txt')
-		message.channel:send(str)
+		message.channel:send('```' .. str .. '```')
 		return
 	end
 	
 	if message.content == '#boatstuff' then
-		local final_string = 'boardroom.bat'
+		local final_string = 'boardroom.bat hornet'
 		os.execute(final_string)		
-		message.channel:send {
-			file = "final.jpg",
-		}
+	--	message.channel:send {
+	--		file = "final.jpg",
+	--	}
 		--channel.sendMessage("message").addFile(new File("path/to/file")).queue();
-	end	
+	elseif message.content == '#turkeystuff' then
+		local final_string = 'boardroom.bat turkey'
+		os.execute(final_string)		
+	--	message.channel:send {
+	--		file = "final.jpg",
+	--	}		
+	end
 	
 end)
 
