@@ -1,20 +1,16 @@
 
 
--- DOCUMENATION:
--- This is how you should load this:
+-- CSAR_ELT.LUA
+-- Calls Ciribob's DCS-SimpleTextToSpeech (DCS.STTS)
+-- and plays "ELT_2m.mp3" on Guard (243.000Mhz)
+-- when
 -- assert(loadfile("C:/HypeMan/s2c/csar_elt.lua"))()
 
-
--- PRECONDITIONS:
--- This script requires a lot: 
--- Moost, Mist, HypeMan, JSON, DCS-SimpleTextToSpeech
--- You need to include these in your mission.  They are commented out now.
+-- Requires  Mist, and DCS.STTS, ie:
 -- assert(loadfile("C:/HypeMan/mist.lua"))()
--- assert(loadfile("C:/HypeMan/Moose.lua"))()-- 
--- JSON = (loadfile "C:/HypeMan/JSON.lua")() -- one-time load of the routines
--- assert(loadfile("C:/HypeMan/HypeMan.lua"))()
 -- assert(loadfile("C:/HypeMan/DCS-SimpleTextToSpeech.lua"))()
 
+-- OPTIONS:
 -- SET THIS TO TRUE IF YOU WAN TO ANNOUNCE AI AIRCRAFT!
 local CSAR_ELT_AI_AIRCRAFT = false
 
@@ -57,9 +53,7 @@ local function CSARPilotEjectHandler(event)
 		-- According to https://wiki.hoggitworld.com/view/DCS_func_getCoalition
 		-- the blue coalition is "2"
 		if Unit.getCoalition(event.initiator) == 2 then			
-			STTS.PlayMP3("C:\\HypeMan\\s2c\\ELT_2m.mp3","243.000","AM","0.5","Multiple",0)		
-			-- trigger.action.outText("ding", 2)
-			-- trigger.action.outSound('ding.wav')		
+			STTS.PlayMP3("ELT_2m.mp3","243.000","AM","0.5","Multiple",0)		
 		end
 	end
 end
