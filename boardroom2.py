@@ -2,6 +2,7 @@ import gspread
 import json
 import os 
 import time
+from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib.table import Table
@@ -67,7 +68,12 @@ def calculateGradeCivilian(curList):
     for i in curList:
         if i['case'] == 3 and not '3' in gradeCell['icon']:
             gradeCell['icon'] += '3'
-                    
+         
+        if i['case'] == 2 and not '2' in gradeCell['icon']:
+            gradeCell['icon'] += '2'
+         
+        
+         
         try:
             tmp = float(i['points'])
             if tmp > pt:
@@ -257,6 +263,7 @@ def plotSquadron(pilotRows, options):
     #unicorn='✈️'
     #case3 = '⚸'
     case3 = '•'
+    case2 = '⊙'
     blankcell='#FFFFFF'
      #colors=['red','orange','orange','yellow','lightgreen']  #078a21
     #colors=['#a00000','#835C3B','#d17a00','#b6c700','#0bab35','#057718','#057718']
@@ -361,6 +368,8 @@ def plotSquadron(pilotRows, options):
             
             if '3' in ij['icon']:
                 text = case3
+            elif '2' in ij['icon']:
+                text = case2
                         
             cell = tb.add_cell(row_idx,col_idx,width,height,text=text,loc='center',facecolor=color) #edgecolor='none'  
             cell.get_text().set_color('#333412')
@@ -419,6 +428,11 @@ def plotDefaultBoard(pilotRows, options):
     goldstar = '⭐'
     goldstar = '★'
     case3 = '•'
+    case3= '◉'
+    case2 = '⊙'
+    case2 = '○'
+    #case2 = '○'
+    #case2 = '∘'
     #unicorn='✈️'
     blankcell='#1A392A'
     
@@ -442,7 +456,7 @@ def plotDefaultBoard(pilotRows, options):
         
     textcolor = '#FFFFF0'
     edgecolor = '#708090'
-    cell = tb.add_cell(0,0,4*width,height,text='Callsign',loc='center',facecolor=blankcell) #edgecolor='none'
+    cell = tb.add_cell(0,0,5*width,height,text='Callsign',loc='center',facecolor=blankcell) #edgecolor='none'
     cell.get_text().set_color(textcolor)
     cell.set_text_props(fontproperties=FontProperties(weight='bold',size=8))   
     cell.set_edgecolor(edgecolor)
@@ -454,7 +468,11 @@ def plotDefaultBoard(pilotRows, options):
     cell.set_text_props(fontproperties=FontProperties(weight='bold',size=8))
     cell.set_edgecolor(edgecolor)
     #cell.set_fontsize(24)
-    titlestr = ' JOINT OPS WING'
+    
+    currentMonth = datetime.now().month
+    titlestr = ' JOINT OPS WING' #+ str(currentMonth) + '/' + str(datetime.now().year)
+    
+    print(titlestr)
     count = 0
     for col_idx in range(2,maxLength+2):
         
@@ -500,7 +518,7 @@ def plotDefaultBoard(pilotRows, options):
                 name = "SippyCup"    
 
                 
-        cell = tb.add_cell(row_idx,0,4*width,height,text=name,loc='center',facecolor=blankcell,edgecolor='blue') #edgecolor='none'    
+        cell = tb.add_cell(row_idx,0,5*width,height,text=name,loc='center',facecolor=blankcell,edgecolor='blue') #edgecolor='none'    
         cell.get_text().set_color(textcolor)
         cell.set_text_props(fontproperties=FontProperties(weight='bold',size="7.5"))
         cell.set_edgecolor(edgecolor)
@@ -520,9 +538,11 @@ def plotDefaultBoard(pilotRows, options):
             if '3' in g['icon'] and '5' in g['icon']:
                 text = goldstar
             elif '3' in g['icon']:
-                text = case3
+                text = case3            
             elif '5' in g['icon']:
-                text = anchor            
+                text = anchor   
+            elif '2' in g['icon']:
+                text = case2
                         
             cell = tb.add_cell(row_idx,col_idx,width,height,text=text,loc='center',facecolor=color) #edgecolor='none'  
             cell.get_text().set_color('#333412')
@@ -649,6 +669,22 @@ pilotDict = {}
 # set the default grade
 #grade0={}; grade0['color']='white'; grade0['score']=0.0; grade0['symbol']='x'; grade0['grade']='--'
 
+# if squadron is empty then lets trim the landings not in the current month
+data2 = []
+if squadron == '':
+    currentMonth = datetime.now().month
+    print('skipping landings not in current month')
+    for i in data: 
+        #print(i)
+        idate = i['ServerDate'].split('/')
+        imonth = int(idate[1])
+        
+        if imonth == currentMonth:
+            data2.append(i)
+            
+    data = data2
+        
+    
 for i in reversed(data):
     name = i['pilot']
     if name not in pilots:
