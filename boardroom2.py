@@ -260,10 +260,13 @@ def plotSquadron(pilotRows, options):
     anchor='⚓'
     goldstar = '⭐'
     goldstar = '★'
-    #unicorn='✈️'
-    #case3 = '⚸'
     case3 = '•'
+    case3= '◉'
     case2 = '⊙'
+    case2 = '○'
+    #case2 = '○'
+    #case2 = '∘'
+    #unicorn='✈️'
     blankcell='#FFFFFF'
      #colors=['red','orange','orange','yellow','lightgreen']  #078a21
     #colors=['#a00000','#835C3B','#d17a00','#b6c700','#0bab35','#057718','#057718']
@@ -375,7 +378,7 @@ def plotSquadron(pilotRows, options):
             cell.get_text().set_color('#333412')
             cell.set_linewidth(0.5)
            # cell.auto_set_font_size()
-            cell.set_text_props(fontproperties=FontProperties(weight='bold',size="14"))
+            cell.set_text_props(fontproperties=FontProperties(weight='bold',size="10"))
             cell.set_edgecolor(edgecolor)    
             col_idx = col_idx + 1
                     
@@ -579,7 +582,7 @@ ruleset = 'best'
 #print('Length of argv: ' , len(sys.argv));
 if len(sys.argv) >= 2:   
     if str(sys.argv[1]) == 'turkey':
-        airframe = 'F-14B'
+        airframe = ['F-14B', 'F-14A-135-GR']
     elif str(sys.argv[1]) == 'hornet':    
         airframe = 'FA-18C_hornet'
     elif str(sys.argv[1]) == 'scooter':
@@ -615,7 +618,8 @@ if airframe != '':
     print('Keeping only grades for airframe: ', airframe)    
     for i in data:
         # if i['airframe']
-        if i['airframe'] == airframe:
+        #if i['airframe'] == airframe:
+        if i['airframe'] in airframe:
             data2.append(i)
             # print('Deleting airframe: ', i['airframe'], ' was looking for: ' , airframe)
             # data.remove(i)
@@ -683,7 +687,7 @@ if squadron == '':
             data2.append(i)
             
     data = data2
-        
+       
     
 for i in reversed(data):
     name = i['pilot']
