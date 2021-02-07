@@ -580,25 +580,26 @@ squadron = ''
 ruleset = 'best'
 
 #print('Length of argv: ' , len(sys.argv));
-if len(sys.argv) >= 2:   
+if len(sys.argv) >= 2:
     if str(sys.argv[1]) == 'turkey':
         airframe = ['F-14B', 'F-14A-135-GR']
-    elif str(sys.argv[1]) == 'hornet':    
+    elif str(sys.argv[1]) == 'hornet':
         airframe = 'FA-18C_hornet'
     elif str(sys.argv[1]) == 'scooter':
         airframe = 'A-4E-C'
     elif str(sys.argv[1]) == 'harrier':
         airframe = 'AV8BNA'
-        
-    print('Aircraft: ', airframe)     
-if len(sys.argv) >= 3:        
-    ruleset = str(sys.argv[2])         
-    
-if len(sys.argv) >= 4:    
+    elif str(sys.argv[1]) == 'goshawk':
+        airframe = 'T-45'				 
+    print('Aircraft: ', airframe)
+if len(sys.argv) >= 3:
+    ruleset = str(sys.argv[2])
+
+if len(sys.argv) >= 4:
     squadron = str(sys.argv[3]);
-    print('Squadron: ', squadron) 
-  
-print('Ruleset: ', ruleset)   
+    print('Squadron: ', squadron)
+
+print('Ruleset: ', ruleset)
 lsoData = 'data.txt'
 
 updateDatabase(lsoData)

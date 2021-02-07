@@ -290,6 +290,10 @@ if len(sys.argv)>= 2:
     elif str(sys.argv[1]) == 'scooter':
         airframe = 'A-4E-C'    
         backgroundImage = 'boardroom_03.jpg'        
+    elif str(sys.argv[1]) == 'goshawk':
+        airframe = 'T-45'
+        shutil.copy2('board.png', 'final.jpg')
+        sys.exit()			  
     elif str(sys.argv[1]) == 'harrier':
         airframe = 'AV8BNA'        
          
