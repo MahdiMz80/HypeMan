@@ -377,15 +377,20 @@ def parseFilename(vinput):
     ps = ps[0:ind]
     
     hornet = 'FA-18C_hornet'
-    tomcat = 'F-14B'
+    tomcatB = 'F-14B'
     harrier = 'AV8BNA'
+    tomcatA = 'F-14A-135-GR'
     if hornet in ps:
         print('contains hornet')
         ps = ps.replace(hornet,'')
         pinfo['aircraft']='F/A-18C'
-    elif tomcat in ps:
+    elif tomcatA in ps:
         print('contains tomcat')
-        ps = ps.replace(tomcat,'')
+        ps = ps.replace(tomcatA,'')
+        pinfo['aircraft']='F-14A-135-GR'
+    elif tomcatB in ps:
+        print('contains tomcat')
+        ps = ps.replace(tomcatB,'')
         pinfo['aircraft']='F-14B'
     elif harrier in ps:
         print('contains av8bna')
