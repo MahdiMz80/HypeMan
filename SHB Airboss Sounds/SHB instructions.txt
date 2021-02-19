@@ -1,0 +1,12 @@
+The SHB was added to Airboss by Sickdog of Arizona Angry Pilots.
+
+To get it to work, most of the scripting is done in the airboss.lua file (see BlackSeaAirboss_Tanker.lua).  This file contains the scripting to create the Airboss object, and also the scripting to trick the Hypeman scripts to grabbing a modified trapsheet.  The sound files need to be added to the AirbossSoundFiles in the miz, or commented out in the lua.
+
+The trapsheet.py has been changed to recognize this and the boardroom2.py has been changed to recognize the different scores.
+
+Still to do:
+- add a proper icon for SHB Unicorn
+- add colors for NG and (OK) SH passes
+
+
+TonyG (Yoda from JOW)

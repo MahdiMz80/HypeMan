@@ -93,6 +93,8 @@ def calculateGradeCivilian(curList):
     
 def colorFromPoints(g):
 
+    bluegraycolor = '#708286'
+    glossgraycolor = '#5F615E'							  
     redcolor = '#ED1B24'
     browncolor = '#835C3B'
     orangecolor = '#d17a00'
@@ -117,8 +119,12 @@ def colorFromPoints(g):
         color = yellowcolor
     elif g == 4.0:
         color = greencolor 
+    elif g == 4.25:
+        color = glossgraycolor							  
     elif g == 5:                
         color = greencolor
+    elif g == 5.5:
+        color = bluegraycolor						 
     else:
         color = blankcell
         
@@ -257,6 +263,7 @@ def plotSquadron(pilotRows, options):
     n_rows = len(pilots)+1
     width, height = 100 / n_cols, 100.0 / n_rows
     #height = height/10
+    shithot ='🎖️'	  
     anchor='⚓'
     goldstar = '⭐'
     goldstar = '★'
@@ -427,6 +434,7 @@ def plotDefaultBoard(pilotRows, options):
     n_cols = maxLength+2
     n_rows = len(pilots)+1
     width, height = 100 / n_cols, 100.0 / n_rows
+    shithot ='🎖️'		  
     anchor='⚓'
     goldstar = '⭐'
     goldstar = '★'
@@ -442,9 +450,11 @@ def plotDefaultBoard(pilotRows, options):
 
     #colors=['red','orange','orange','yellow','lightgreen']  #078a21
     #colors=['#a00000','#835C3B','#d17a00','#b6c700','#0bab35','#057718','#057718']
-    colors=['#a00000','#d17a00','#d17a00','#b6c700','#0bab35','#057718','#057718']
+    colors=['#a00000','#d17a00','#d17a00','#b6c700','#0bab35','#057718','#057718', '#708286','#5F615E']
             
     redcolor = '#a00000'
+    bluegraycolor = '#708286'
+    glossgraycolor = '#5F615E'						  
     browncolor = '#835C3B'
     orangecolor = '#d17a00'
     yellowcolor = '#b6c700'
@@ -538,7 +548,9 @@ def plotDefaultBoard(pilotRows, options):
             color = g['bg']            
             text = ''      
             
-            if '3' in g['icon'] and '5' in g['icon']:
+            if '5.5' in g['icon']:
+                text = shithot
+            elif '3' in g['icon'] and '5' in g['icon']:
                 text = goldstar
             elif '3' in g['icon']:
                 text = case3            

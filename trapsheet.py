@@ -71,6 +71,7 @@ def plotTrapsheet(ts, pinfo):
     gridcolor = '#585858'
     spinecolor = gridcolor
     labelcolor = '#BFBFBF'
+	
     dx = 20#-151;
     dy = 20#-6;
 
@@ -140,31 +141,71 @@ def plotTrapsheet(ts, pinfo):
     mystr = 'Lineup'
     ax.text(xpoint,510,mystr,color=labelcolor,fontsize=xpointsize,alpha=0.5)
     
+
+    trapfile = getRecentTrapsheet(trapfolder)
+    p = Path(trapfile)
+    ps = p.stem
+
+    sh = 'SH_'
+    perfect_Pass = "unicorn_"
+    if sh in ps:
+        if perfect_Pass in ps:
+            print('SH Pass AND Unicorn in file name, THATS TITS YO!')
+            ax.text(0.5, 0.75, ' *** SIERRA-HOTEL UNICORN PASS !! ***',
+            verticalalignment='bottom', horizontalalignment='center',
+            transform=ax.transAxes,
+            color='red', fontsize=22)  
+            #print('SIERRA HOTEL PASS!')
+            ax.text(0.505, 0.755, ' *** SIERRA-HOTEL UNICORN PASS !! ***',
+            verticalalignment='bottom', horizontalalignment='center',
+            transform=ax.transAxes,
+            color='yellow', fontsize=22)  
+        else:
+            print('SH Pass in file name so print that sucka!')
+            ax.text(0.5, 0.75, 'SIERRA-HOTEL PASS',
+            verticalalignment='bottom', horizontalalignment='center',
+            transform=ax.transAxes,
+            color='yellow', fontsize=15)  
+            #print('SIERRA HOTEL PASS!')
+    else:
+        print('no SH pass drawn')
+ 
     # %% GLIDE SLOPE
     ax = axs[0]
     
-    ax.set_ylim([-1,650])
+    ax.set_ylim([-1,650]) #Glideslope Reference scale from 0 to 650 feet
        
     ax.set_facecolor(facecolor)
     
-   # xgs = np.linspace(0,xy[-1],2)
-    xgs = xy[0]
-    zt = 6076.12*xgs*np.tan(3.5*np.pi/180.0);
-    gx = 0
-    gz = 40
-    ax.plot(xy[0],ts['Alt'], 'g', linewidth=16, alpha=0.0)
+    if pinfo['aircraft']=='AV-8B':#adam edit 2/14/21- added a check to see if Harrier or not for glideslop ref line adjustment
+         # xgs = np.linspace(0,xy[-1],2)
+        xgs = xy[0] #originally set to 0 2/14/21, doesn't seem to do anything when I change it
+        zt = 6076.12*xgs*np.tan(3.5*np.pi/180.0); #original line:zt = 6076.12*xgs*np.tan(3.5*np.pi/180.0); 2/14/21 changed to 3.0*np
+        gx = 0 #this must be a scaling thing... squished the graph when I changed to 100
+        gz = 40
+        ax.plot(xy[0],ts['Alt'], 'g', linewidth=16, alpha=0.0) #no idea what these lines do, don't see any changes
+        ax.plot(xgs+gx,zt+gz+40,referencecolor,linewidth=1.1,alpha=1) #Glide Slope Reference line - 2/14/21 Added 55 to it to get the ref line to be more accurate         
+    else:    
+         # xgs = np.linspace(0,xy[-1],2)
+        xgs = xy[0] #originally set to 0 2/14/21, doesn't seem to do anything when I change it
+        zt = 6076.12*xgs*np.tan(3.5*np.pi/180.0); 
+        gx = 0 #this must be a scaling thing... squished the graph when I changed to 100
+        gz = 40
+        ax.plot(xy[0],ts['Alt'], 'g', linewidth=16, alpha=0.0) #no idea what these lines do, don't see any changes
+        ax.plot(xgs+gx,zt+gz,referencecolor,linewidth=1.1,alpha=1) #Glide Slope Reference line - 
+
+
+
+   
     
-    
-    ax.plot(xgs+gx,zt+gz,referencecolor,linewidth=1.1,alpha=1)
-    
-    ax.plot(xy[0],ts['Alt']+60, 'g', linewidth=16, alpha=0.1)
-    ax.plot(xy[0],ts['Alt']+60, 'g', linewidth=10, alpha=0.1)
-    ax.plot(xy[0],ts['Alt']+60, 'g', linewidth=6, alpha=0.15)
-    ax.plot(xy[0],ts['Alt']+60, 'w-', linewidth=1, alpha=0.45) 
+    ax.plot(xy[0],ts['Alt']+60, 'g', linewidth=8, alpha=0.1) #"glow" effect arond the glideslope line
+    ax.plot(xy[0],ts['Alt']+60, 'g', linewidth=5, alpha=0.1)  #"glow" effect arond the glideslope line
+    ax.plot(xy[0],ts['Alt']+60, 'g', linewidth=3, alpha=0.15)  #"glow" effect arond the glideslope line
+    ax.plot(xy[0],ts['Alt']+60, 'w-', linewidth=1, alpha=0.45)  #"glow" effect arond the glideslope line
     
     #ax.set_xlim(m)
     #ax.invert_xaxis()
-    ax.grid(linestyle='-', linewidth='0.5', color=gridcolor) 
+    ax.grid(linestyle='-', linewidth='0.5', color=gridcolor) #Glideslope Grid
     ax.tick_params(axis=u'both', which=u'both',length=0)
     setSpine(ax,'none')
     ax.spines['right'].set_color(spinecolor) 
@@ -192,7 +233,6 @@ def plotTrapsheet(ts, pinfo):
 #                        boxcoords=("axes fraction", "data"),
 #                        box_alignment=(0., 0.5),
 #                        arrowprops=dict(arrowstyle="->"))
-
     if pinfo['aircraft']=='AV-8B':
         # top down view
         carrier01 = plt.imread('boat03_2.png')
@@ -233,6 +273,8 @@ def plotTrapsheet(ts, pinfo):
 #    xticks[0].label1.set_visible(False)
 #    xticks[-1].label1.set_visible(False)
         
+
+      
     # %% Angle of Attack
     ax = axs[2]
     
@@ -242,8 +284,11 @@ def plotTrapsheet(ts, pinfo):
     plt.setp(ax.get_xticklabels(), color=labelcolor)
     plt.setp(ax.get_yticklabels(), color=labelcolor)
     ax.set_xlabel("Distance (Nautical Miles)")
-    # ax.set_ylabel("Angl")
-    # ax.set_ylabel('AoA',color=labelcolor)
+    
+
+
+    #ax.set_ylabel("Angl")
+    #ax.set_ylabel('SIERRA HOTEL PASS!',color=shcolor)
     
 #    ax.get_xaxis().set_visible(False)
 #    ax.get_yaxis().set_visible(False)
@@ -253,29 +298,6 @@ def plotTrapsheet(ts, pinfo):
     
     maxvalue = np.max(ts['AoA'][:-num_aoa])
     minvalue = np.min(ts['AoA'][:-num_aoa])
-    
-    
-    if maxvalue < 10 and minvalue > 6:
-        maxvalue = 10.01
-        minvalue = 5.99
-    
-    if maxvalue > 10 and minvalue > 6:
-        minvalue = 3.99
-    #if minvalue > 5.01:
-    #    minvalue = 5.01
-        
-    print('Max value: ',maxvalue)
-    print('Min value: ',minvalue)    
-    ax.set_ylim([minvalue,maxvalue])
-    
-        
-        
-    ax.set_facecolor(facecolor)
-   
-    stralph = 'α'
-    stralph = 'AoA'
-    #ax.text(1.1535,10.4,stralph,color='g',fontsize=22,alpha=0.3)    
-    ax.text(xpoint,10.2,stralph,color=labelcolor,fontsize=xpointsize,alpha=0.5)
     
     
     # 6.3 6.9 7.4 8.1 8.8 9.3 9.8
@@ -292,22 +314,168 @@ def plotTrapsheet(ts, pinfo):
 #    ax.add_patch(rect)
 #    rect = patches.Rectangle((0,6.9),1.2,2.4,linewidth=0,edgecolor='none',facecolor='red',alpha=0.1)
 #    ax.add_patch(rect)
+
+    hornet_aoa = 'FA-18C_hornet'
+    tomcat_aoa = 'F-14B'
+    harrier_aoa = 'AV8BNA'
+    skyhawk_aoa = 'A-4E-C'
+
+    if hornet_aoa in ps:    # 7.4 on speed min, 8.1 on speed, 8.8 onspeed max
+        print('AOA line displayed for Hornet')
+
+        if maxvalue < 10 and minvalue > 6:
+            print('AOA Hornet * maxvalue < 10 and minvalue > 6 *')    
+            maxvalue = 10.01
+            minvalue = 5.99
     
-    lm = ax.get_xlim() 
-    
-    xmax = lm[1]
-    
-    if xmax < 0.7:
-        xmax = 0.7
+        if maxvalue > 10 and minvalue > 6:
+            print('AOA Hornet ** maxvalue > 10 and minvalue > 6 **')
+            minvalue = 3.99
+        #if minvalue > 5.01:
+        #    minvalue = 5.01
         
-    if xmax > 1.2:
-        xmax = 1.2
+        print('Hornet Max value: ',maxvalue)
+        print('Hornet Min value: ',minvalue)    
+        ax.set_ylim([minvalue,maxvalue])
+        ax.set_facecolor(facecolor)
    
-    ax.plot([0,xmax],[8.8,8.8],'g-',linewidth=1.2,alpha=0.8,linestyle='--')
-    ax.plot([0,xmax],[7.4,7.4],'g-',linewidth=1.2,alpha=0.8,linestyle='--')    
-    ax.plot(xy[0][:-num_aoa],ts['AoA'][:-num_aoa], 'g-', linewidth=16, alpha=0.1) 
-    ax.plot(xy[0][:-num_aoa],ts['AoA'][:-num_aoa], 'g-', linewidth=10, alpha=0.1) 
-    ax.plot(xy[0][:-num_aoa],ts['AoA'][:-num_aoa], 'g-', linewidth=6, alpha=0.15) 
+        stralph = 'a'
+        stralph = 'AoA'
+        #ax.text(1.1535,10.4,stralph,color='g',fontsize=22,alpha=0.3)    
+        ax.text(xpoint,10.2,stralph,color=labelcolor,fontsize=xpointsize,alpha=0.5)
+
+        lm = ax.get_xlim() 
+        xmax = lm[1]
+    
+        if xmax < 0.7:
+            #print('HORNET ** xmax < 0.7:')
+            xmax = 0.7
+        
+        if xmax > 1.2:
+            #print('TOMCAT ** xmax > 1.2:')
+            xmax = 1.2
+        
+        ax.plot([0,xmax],[8.8,8.8],'r-',linewidth=1.2,alpha=0.8,linestyle='--') #g-
+        ax.plot([0,xmax],[7.4,7.4],'r-',linewidth=1.2,alpha=0.8,linestyle='--') #g- 
+    elif tomcat_aoa in ps: # 9.5 onspeed min, 10.0 onspeed, 10.5 onspeed max - 2/14/21 Decided to try increading Tomcat 0.5 
+        print('AOA line displayed for Tomcat')
+
+        if maxvalue < 12.0 and minvalue > 8.0:
+            print('AOA Tomcat * maxvalue < 17.5 and minvalue > 12.5 *')
+            maxvalue = 12.01
+            minvalue = 7.99
+    
+        if maxvalue > 12.0 and minvalue > 8.0:
+            print('AOA Tomcat ** maxvalue > 17.5 and minvalue > 12.5 **')
+            minvalue = 5.99
+        #if minvalue > 5.01:
+        #    minvalue = 5.01
+        
+        print('Tomcat Max value: ',maxvalue)
+        print('Tomcat Min value: ',minvalue)    
+        ax.set_ylim([minvalue,maxvalue]) #Added 2/1/21 - This will create the Y-axis max and min limits, I added 1.5 to show a little extra area above and below the red reference lines
+        ax.set_facecolor(facecolor)
+   
+        stralph = 'a'
+        stralph = 'AoA'
+        #ax.text(1.1535,10.4,stralph,color='g',fontsize=22,alpha=0.3)    
+        ax.text(xpoint,10.2,stralph,color=labelcolor,fontsize=xpointsize,alpha=0.5)
+
+        lm = ax.get_xlim() #Mathplot x-axis limits... barking up the wrong tree when trying to reprint the AOA reference lines... leave this as is.
+        xmax = lm[1]
+    
+        if xmax < 0.7:
+            #print('TOMCAT ** xmax < 0.7:')
+            xmax = 0.7
+        
+        if xmax > 1.2:
+            #print('TOMCAT ** xmax > 1.2:')
+            xmax = 1.2
+
+        ax.plot([0,xmax],[11.0,11.0],'r-',linewidth=1.2,alpha=0.8,linestyle='--') # I found TongG had mentioned that 10.0 seems to be the right AOA for the tomcat, depsite the values in Airboss that seem to show min and max of around 14.5-15.5 degrees... just doesn't match up with any trapsheets. So, let's try 10.0 as the ideal AOA, and 0.5 limits either side. Appears to work well from best pass I've had on 1/31 (actually 2/1/21 early morning) where only comment was (F)IM
+        ax.plot([0,xmax],[10.0,10.0],'r-',linewidth=1.2,alpha=0.8,linestyle='--') #g- 
+    elif harrier_aoa in ps: # 10 is onspeed min,  11 is onspeed, 12 is onspeed max
+        if maxvalue < 13 and minvalue > 9:
+            print('AOA * maxvalue < 17.5 and minvalue > 12.5 *')
+            maxvalue = 13.01
+            minvalue = 8.99
+    
+        if maxvalue > 13 and minvalue > 9:
+            print('AOA ** maxvalue > 17.5 and minvalue > 12.5 **')
+            minvalue = 6.99
+
+        if maxvalue > 14 and minvalue < 8: #added 2/14/21 - This keeps the plot reference lines under control with wild AOA values seen with Harrier
+            print('AOA ** maxvalue > 17.5 and minvalue > 12.5 **') 
+            maxvalue = 15.0
+            minvalue = 7.0
+
+        #if minvalue > 5.01:
+        #    minvalue = 5.01
+        
+        print('Harrier Max value: ',maxvalue)
+        print('Harrier Min value: ',minvalue)    
+        ax.set_ylim([minvalue,maxvalue])
+        ax.set_facecolor(facecolor)
+   
+        stralph = 'a'
+        stralph = 'AoA'
+        #ax.text(1.1535,10.4,stralph,color='g',fontsize=22,alpha=0.3)    
+        ax.text(xpoint,10.2,stralph,color=labelcolor,fontsize=xpointsize,alpha=0.5)
+
+        lm = ax.get_xlim() #Mathplot x-axis limits... barking up the wrong tree when trying to reprint the AOA reference lines... leave this as is.
+        xmax = lm[1]
+    
+        if xmax < 0.7:
+            xmax = 10.7
+            print(' xmax = 10.7')
+        if xmax > 1.2:
+            xmax = 1.2
+            print(' xmax = 1.2')
+
+        print('AOA line displayed for Harrier')
+        ax.plot([0,xmax],[12.0,12.0],'r-',linewidth=1.2,alpha=0.8,linestyle='--') #g-
+        ax.plot([0,xmax],[10.0,10.0],'r-',linewidth=1.2,alpha=0.8,linestyle='--') #g-
+    elif skyhawk_aoa in ps: # 8.5 onspeed min, 8.75 onspeed, 9.0 onspeed max
+        if maxvalue < 10.75 and minvalue > 6.75:
+            print('AOA * maxvalue < 17.5 and minvalue > 12.5 *')
+            maxvalue = 10.76
+            minvalue = 6.74
+    
+        if maxvalue > 10.75 and minvalue > 6.75:
+            print('AOA ** maxvalue > 17.5 and minvalue > 12.5 **')
+            minvalue = 4.74
+        #if minvalue > 5.01:
+        #    minvalue = 5.01
+        
+        print('Harrier Max value: ',maxvalue)
+        print('Harrier Min value: ',minvalue)    
+        ax.set_ylim([minvalue,maxvalue])
+        ax.set_facecolor(facecolor)
+   
+        stralph = 'a'
+        stralph = 'AoA'
+        #ax.text(1.1535,10.4,stralph,color='g',fontsize=22,alpha=0.3)    
+        ax.text(xpoint,10.2,stralph,color=labelcolor,fontsize=xpointsize,alpha=0.5)
+
+        lm = ax.get_xlim() #Mathplot x-axis limits... barking up the wrong tree when trying to reprint the AOA reference lines... leave this as is.
+        xmax = lm[1]
+    
+        if xmax < 0.7:
+            xmax = 0.7
+        
+        if xmax > 1.2:
+            xmax = 1.2
+
+        print('AOA line displayed for Skyhawk')
+        ax.plot([0,xmax],[9.0,9.0],'r-',linewidth=1.2,alpha=0.8,linestyle='--') #g-
+        ax.plot([0,xmax],[8.5,8.5],'r-',linewidth=1.2,alpha=0.8,linestyle='--') #g-
+    else:
+        print('no SH pass drawn')
+
+      
+    ax.plot(xy[0][:-num_aoa],ts['AoA'][:-num_aoa], 'g-', linewidth=8, alpha=0.1) 
+    ax.plot(xy[0][:-num_aoa],ts['AoA'][:-num_aoa], 'g-', linewidth=5, alpha=0.1) 
+    ax.plot(xy[0][:-num_aoa],ts['AoA'][:-num_aoa], 'g-', linewidth=3, alpha=0.15) 
     ax.plot(xy[0][:-num_aoa],ts['AoA'][:-num_aoa], 'w-', linewidth=1, alpha=0.45) 
     ax.grid(linestyle='-', linewidth='0.5', color=gridcolor) 
     # plt.gca().invert_yaxis()
@@ -321,18 +489,29 @@ def plotTrapsheet(ts, pinfo):
     #ax.grid(which='minor', alpha=0.2)
     #ax.grid(which='major', alpha=0.5)
     
-    
+   
     ax.set_xlim([0.001,xmax]) 
     ax.invert_xaxis()
+    
+        
     plt.show()    
     
     titlestr = ''
     callsign = pinfo['callsign']
     titlestr = callsign;
     titlestr+=' '
-    titlestr+=ts['Grade']
-    titlestr+=' '
-    titlestr+=str(ts['Points'][-1])
+    unicorn = 'unicorn_'
+    if unicorn in ps:
+        print('unicorn in file name so change the grade to _OK_')
+        #print('SIERRA HOTEL PASS!')
+        titlestr+='_OK_'
+        titlestr+=' '
+        titlestr+='5.0'
+    else:
+        print('no unicorn pass drawn')
+        titlestr+=ts['Grade']
+        titlestr+=' '
+        titlestr+=str(ts['Points'][-1])
     titlestr+='PT'
     titlestr+='\n'
     titlestr+=str(ts['Details'])
@@ -340,6 +519,9 @@ def plotTrapsheet(ts, pinfo):
     titlestr+=pinfo['aircraft']
     titlestr+=' '
     titlestr +=pinfo['time']
+    #titlestr+='\n'
+    #titlestr+=' TESTING 1...2...3!'
+
     #tstr.join([str(ts['Grade'][-1]), ' ', str(ts['Points'][-1]) , ' points'])
     
     fig.suptitle(titlestr, fontsize=14,color=labelcolor)
@@ -367,6 +549,7 @@ def parseFilename(vinput):
     pinfo['time']=timestampStr
     print(timestampStr)
     ps = p.stem
+
     print(ps)
     ps=ps.replace('AIRBOSS-','')
     ind = ps.find('-')
@@ -401,25 +584,34 @@ def parseFilename(vinput):
         print('contains av8bna')
         ps = ps.replace(harrier, '')
         pinfo['aircraft']='AV-8B'
+									
+								
+									
+									   
     else:
         print('unknown aircraft.')
 
     print(ps)
     
-    pinfo['callsign']=ps[0:-1]
-    print(pinfo['callsign'])
-    return pinfo
     
+
+    pinfo['callsign']=ps[0:-1]
+    return pinfo
+def getCallsign(input):
+    print('Getting callsign from: ', input)
+    
+# %%
+
+# %%
+
 #%%
 trapfolder = 'C:/python_code/bm/trapsheets'
 trapfolder = 'C:/FlightSimDocs/JOW/stats/SLModStats/LSO'
 trapfolder = 'C:/HypeMan/trapsheets'
 trapfolder = 'C:/Users/DCSAdmin/Saved Games/DCS.openbeta_server'
 trapfolder = 'C:/Users/jow/Saved Games/DCS.openbeta_server'
-trapfolder = 'C:/HypeMan/'
 #trapfolder = 'C:/temp'
 p = Path(str(trapfolder))
-
 
 #print('Latest path: ', latest_path)
 
@@ -442,3 +634,5 @@ plotTrapsheet(ts, pinfo)
 
 # %% this is a cell here
 print('Grade: ', ts['Grade'], ' Points: ', ts['Points'][-1], ' Details: ', ts['Details'])
+
+
