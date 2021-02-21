@@ -354,7 +354,7 @@ def plotTrapsheet(ts, pinfo):
 
         if xmax > 1.2:
             #print('TOMCAT ** xmax > 1.2:')
-            xmax = 1.6
+            xmax = 1.2
 
         ax.plot([0,xmax],[8.8,8.8],'g-',linewidth=1.2,alpha=0.8,linestyle='--') #g-
         ax.plot([0,xmax],[7.4,7.4],'g-',linewidth=1.2,alpha=0.8,linestyle='--') #g-
