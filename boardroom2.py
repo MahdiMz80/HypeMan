@@ -119,8 +119,8 @@ def colorFromPoints(g):
         color = yellowcolor
     elif g == 4.0:
         color = greencolor 
-    elif g == 4.25:
-        color = glossgraycolor							  
+    elif g == 4.50:
+        color = greencolor							  
     elif g == 5:                
         color = greencolor
     elif g == 5.5:

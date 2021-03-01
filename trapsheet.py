@@ -2,8 +2,7 @@ from pathlib import Path
 import csv
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.offsetbox import (TextArea, DrawingArea, OffsetImage,
-                                  AnnotationBbox)
+from matplotlib.offsetbox import (TextArea, DrawingArea, OffsetImage, AnnotationBbox)
 from matplotlib.patches import Circle
 import matplotlib
 import matplotlib.patches as patches
@@ -316,10 +315,12 @@ def plotTrapsheet(ts, pinfo):
 #    ax.add_patch(rect)
 
     hornet_aoa = 'FA-18C_hornet'
+    hawk_aoa = 'T-45'
     tomcatA_aoa = 'F-14A-135-GR'
     tomcatB_aoa = 'F-14B'
     harrier_aoa = 'AV8BNA'
     skyhawk_aoa = 'A-4E-C'
+
 
     if hornet_aoa in ps:    # 7.4 on speed min, 8.1 on speed, 8.8 onspeed max
         print('AOA line displayed for Hornet')
@@ -358,6 +359,43 @@ def plotTrapsheet(ts, pinfo):
 
         ax.plot([0,xmax],[8.8,8.8],'g-',linewidth=1.2,alpha=0.8,linestyle='--') #g-
         ax.plot([0,xmax],[7.4,7.4],'g-',linewidth=1.2,alpha=0.8,linestyle='--') #g-
+    elif hawk_aoa in ps: # 6.75 onspeed min, 7.00 onspeed, 7.25 onspeed max
+        print('AOA line displayed for Goshawk')
+
+        if maxvalue < 8.5 and minvalue > 6:
+            print('AOA Goshawk * maxvalue < 10 and minvalue > 5 *')
+            maxvalue = 8.51
+            minvalue = 6.01
+
+        if maxvalue > 10 and minvalue > 4:
+            print('AOA Goshawk ** maxvalue > 10 and minvalue > 4 **')
+            minvalue = 3.99
+        #if minvalue > 5.01:
+        #    minvalue = 5.01
+
+        print('Goshawk Max value: ',maxvalue)
+        print('Goshawk Min value: ',minvalue)
+        ax.set_ylim([minvalue,maxvalue])
+        ax.set_facecolor(facecolor)
+
+        stralph = 'a'
+        stralph = 'AoA'
+        #ax.text(1.1535,10.4,stralph,color='g',fontsize=22,alpha=0.3)
+        ax.text(xpoint,10.2,stralph,color=labelcolor,fontsize=xpointsize,alpha=0.5)
+
+        lm = ax.get_xlim()
+        xmax = lm[1]
+
+        if xmax < 0.8:
+            #print('Goshawk ** xmax < 0.7:')
+            xmax = 0.8
+
+        if xmax > 1.2:
+            #print('Goshawk ** xmax > 1.2:')
+            xmax = 1.2
+
+        ax.plot([0,xmax],[7.25,7.25],'g-',linewidth=1.2,alpha=0.8,linestyle='--') #g-
+        ax.plot([0,xmax],[6.75,6.75],'g-',linewidth=1.2,alpha=0.8,linestyle='--') #g-
     elif tomcatA_aoa or tomcatB_aoa in ps: # 9.5 onspeed min, 10.0 onspeed, 10.5 onspeed max - 2/14/21 Decided to try increading Tomcat 0.5
         print('AOA line displayed for Tomcat')
 
@@ -393,8 +431,8 @@ def plotTrapsheet(ts, pinfo):
             #print('TOMCAT ** xmax > 1.2:')
             xmax = 1.2
 
-        ax.plot([0,xmax],[11.0,11.0],'g-',linewidth=1.2,alpha=0.8,linestyle='--') # I found TongG had mentioned that 10.0 seems to be the right AOA for the tomcat, depsite the values in Airboss that seem to show min and max of around 14.5-15.5 degrees... just doesn't match up with any trapsheets. So, let's try 10.0 as the ideal AOA, and 0.5 limits either side. Appears to work well from best pass I've had on 1/31 (actually 2/1/21 early morning) where only comment was (F)IM
-        ax.plot([0,xmax],[10.0,10.0],'g-',linewidth=1.2,alpha=0.8,linestyle='--') #g-
+        ax.plot([0,xmax],[10.818,10.818],'g-',linewidth=1.2,alpha=0.8,linestyle='--') # Based on aoa to degree conversion degrees=.918*aoa-3.411
+        ax.plot([0,xmax],[9.9,9.9],'g-',linewidth=1.2,alpha=0.8,linestyle='--') #g-
     elif harrier_aoa in ps: # 10 is onspeed min,  11 is onspeed, 12 is onspeed max
         if maxvalue < 13 and minvalue > 9:
             print('AOA * maxvalue < 17.5 and minvalue > 12.5 *')
@@ -433,7 +471,7 @@ def plotTrapsheet(ts, pinfo):
             xmax = 1.2
             print(' xmax = 1.2')
 
-        print('AOA line displayed for Harrier')
+        print('AOA line displayed for skyhawk')
         ax.plot([0,xmax],[12.0,12.0],'g-',linewidth=1.2,alpha=0.8,linestyle='--') #g-
         ax.plot([0,xmax],[10.0,10.0],'g-',linewidth=1.2,alpha=0.8,linestyle='--') #g-
     elif skyhawk_aoa in ps: # 8.5 onspeed min, 8.75 onspeed, 9.0 onspeed max
@@ -448,8 +486,8 @@ def plotTrapsheet(ts, pinfo):
         #if minvalue > 5.01:
         #    minvalue = 5.01
 
-        print('Harrier Max value: ',maxvalue)
-        print('Harrier Min value: ',minvalue)
+        print('skyhawk Max value: ',maxvalue)
+        print('skyhawk Min value: ',minvalue)
         ax.set_ylim([minvalue,maxvalue])
         ax.set_facecolor(facecolor)
 
@@ -565,13 +603,15 @@ def parseFilename(vinput):
     tomcatB = 'F-14B'
     harrier = 'AV8BNA'
     tomcatA = 'F-14A-135-GR'
+    scooter = 'A-4E-C'
     goshawk = 'T-45'
+	
     if hornet in ps:
         print('contains hornet')
         ps = ps.replace(hornet,'')
         pinfo['aircraft']='F/A-18C'
     elif goshawk in ps:
-        print('contains T-45')
+        print('contains goshawk')
         ps = ps.replace(goshawk,'')
         pinfo['aircraft']='T-45C'
     elif tomcatA in ps:
@@ -586,10 +626,11 @@ def parseFilename(vinput):
         print('contains av8bna')
         ps = ps.replace(harrier, '')
         pinfo['aircraft']='AV-8B'
-
-
-
-
+    elif scooter in ps:
+        print('contains scooter')
+        ps = ps.replace(scooter,'')
+        pinfo['aircraft']='A-4'
+	
     else:
         print('unknown aircraft.')
 
