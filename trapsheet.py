@@ -113,7 +113,7 @@ def plotTrapsheet(ts, pinfo):
         m = np.array(ax.get_xlim())
         m[0]=0
         #m[1] = 500
-        ax.plot(m,[0,0],referencecolor,linewidth=2,alpha=0.8)
+        ax.plot(m,[50,50],referencecolor,linewidth=2,alpha=0.8)
         #print(m)
     else:
         m = np.array(ax.get_xlim())
@@ -396,22 +396,22 @@ def plotTrapsheet(ts, pinfo):
 
         ax.plot([0,xmax],[7.25,7.25],'g-',linewidth=1.2,alpha=0.8,linestyle='--') #g-
         ax.plot([0,xmax],[6.75,6.75],'g-',linewidth=1.2,alpha=0.8,linestyle='--') #g-
-    elif tomcatA_aoa or tomcatB_aoa in ps: # 9.5 onspeed min, 10.0 onspeed, 10.5 onspeed max - 2/14/21 Decided to try increading Tomcat 0.5
-        print('AOA line displayed for Tomcat')
+    elif tomcatA_aoa in ps: # 9.5 onspeed min, 10.0 onspeed, 10.5 onspeed max - 2/14/21 Decided to try increading Tomcat 0.5
+        print('AOA line displayed for TomcatA')
 
         if maxvalue < 12.0 and minvalue > 8.0:
-            print('AOA Tomcat * maxvalue < 17.5 and minvalue > 12.5 *')
+            print('AOA TomcatA * maxvalue < 17.5 and minvalue > 12.5 *')
             maxvalue = 12.01
             minvalue = 7.99
 
         if maxvalue > 12.0 and minvalue > 8.0:
-            print('AOA Tomcat ** maxvalue > 17.5 and minvalue > 12.5 **')
+            print('AOA TomcatA ** maxvalue > 17.5 and minvalue > 12.5 **')
             minvalue = 5.99
         #if minvalue > 5.01:
         #    minvalue = 5.01
 
-        print('Tomcat Max value: ',maxvalue)
-        print('Tomcat Min value: ',minvalue)
+        print('TomcatA Max value: ',maxvalue)
+        print('TomcatA Min value: ',minvalue)
         ax.set_ylim([minvalue,maxvalue]) #Added 2/1/21 - This will create the Y-axis max and min limits, I added 1.5 to show a little extra area above and below the red reference lines
         ax.set_facecolor(facecolor)
 
@@ -433,7 +433,45 @@ def plotTrapsheet(ts, pinfo):
 
         ax.plot([0,xmax],[10.818,10.818],'g-',linewidth=1.2,alpha=0.8,linestyle='--') # Based on aoa to degree conversion degrees=.918*aoa-3.411
         ax.plot([0,xmax],[9.9,9.9],'g-',linewidth=1.2,alpha=0.8,linestyle='--') #g-
+    elif tomcatB_aoa in ps: # 9.5 onspeed min, 10.0 onspeed, 10.5 onspeed max - 2/14/21 Decided to try increading Tomcat 0.5
+        print('AOA line displayed for TomcatB')
+
+        if maxvalue < 12.0 and minvalue > 8.0:
+            print('AOA TomcatB * maxvalue < 17.5 and minvalue > 12.5 *')
+            maxvalue = 12.01
+            minvalue = 7.99
+
+        if maxvalue > 12.0 and minvalue > 8.0:
+            print('AOA TomcatB ** maxvalue > 17.5 and minvalue > 12.5 **')
+            minvalue = 5.99
+        #if minvalue > 5.01:
+        #    minvalue = 5.01
+
+        print('Tomcat Max value: ',maxvalue)
+        print('Tomcat Min value: ',minvalue)
+        ax.set_ylim([minvalue,maxvalue]) #Added 2/1/21 - This will create the Y-axis max and min limits, I added 1.5 to show a little extra area above and below the red reference lines
+        ax.set_facecolor(facecolor)
+
+        stralph = 'a'
+        stralph = 'AoA'
+        #ax.text(1.1535,10.4,stralph,color='g',fontsize=22,alpha=0.3)
+        ax.text(xpoint,10.2,stralph,color=labelcolor,fontsize=xpointsize,alpha=0.5)
+
+        lm = ax.get_xlim() #Mathplot x-axis limits... barking up the wrong tree when trying to reprint the AOA reference lines... leave this as is.
+        xmax = lm[1]
+
+        if xmax < 0.7:
+            #print('TOMCATB ** xmax < 0.7:')
+            xmax = 0.7
+
+        if xmax > 1.2:
+            #print('TOMCATB ** xmax > 1.2:')
+            xmax = 1.2
+
+        ax.plot([0,xmax],[10.818,10.818],'g-',linewidth=1.2,alpha=0.8,linestyle='--') # Based on aoa to degree conversion degrees=.918*aoa-3.411
+        ax.plot([0,xmax],[9.9,9.9],'g-',linewidth=1.2,alpha=0.8,linestyle='--') #g-
     elif harrier_aoa in ps: # 10 is onspeed min,  11 is onspeed, 12 is onspeed max
+        print('AOA line displayed for Harrier')
         if maxvalue < 13 and minvalue > 9:
             print('AOA * maxvalue < 17.5 and minvalue > 12.5 *')
             maxvalue = 13.01
@@ -448,8 +486,8 @@ def plotTrapsheet(ts, pinfo):
             maxvalue = 15.0
             minvalue = 7.0
 
-        #if minvalue > 5.01:
-        #    minvalue = 5.01
+        if minvalue > 5.01:
+            minvalue = 5.01
 
         print('Harrier Max value: ',maxvalue)
         print('Harrier Min value: ',minvalue)
@@ -471,7 +509,7 @@ def plotTrapsheet(ts, pinfo):
             xmax = 1.2
             print(' xmax = 1.2')
 
-        print('AOA line displayed for skyhawk')
+        print('AOA line displayed for Harrier')
         ax.plot([0,xmax],[12.0,12.0],'g-',linewidth=1.2,alpha=0.8,linestyle='--') #g-
         ax.plot([0,xmax],[10.0,10.0],'g-',linewidth=1.2,alpha=0.8,linestyle='--') #g-
     elif skyhawk_aoa in ps: # 8.5 onspeed min, 8.75 onspeed, 9.0 onspeed max
@@ -529,7 +567,7 @@ def plotTrapsheet(ts, pinfo):
     #ax.grid(which='major', alpha=0.5)
 
     lm = ax.get_xlim() #Mathplot x-axis limits... barking up the wrong tree when trying to reprint the AOA reference lines... leave this as is.
-    xmax = lm[1]
+    #xmax = lm[1]
     ax.set_xlim([0.001,xmax])
     ax.invert_xaxis()
 

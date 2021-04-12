@@ -278,25 +278,25 @@ if len(sys.argv)>= 2:
 
     if str(sys.argv[1]) == 'turkey':
         backgroundImage = 'boardroom 02.jpg'
-        airframe = 'F-14B'
-        
-        shutil.copy2('board.png', 'final.jpg')
-        sys.exit()
+        airframe = 'F-14B' 
+        #shutil.copy2('board.png', 'final.jpg')
+        #sys.exit()
     elif str(sys.argv[1]) == 'hornet':    
         airframe = 'FA-18C_hornet'
         backgroundImage = 'boardroom 01.jpg'   
-        shutil.copy2('board.png', 'final.jpg')
-        sys.exit()
+        #shutil.copy2('board.png', 'final.jpg')
+        #sys.exit()
     elif str(sys.argv[1]) == 'scooter':
         airframe = 'A-4E-C'    
         backgroundImage = 'boardroom_03.jpg'        
     elif str(sys.argv[1]) == 'goshawk':
         airframe = 'T-45'
-        shutil.copy2('board.png', 'final.jpg')
-        sys.exit()			  
+        backgroundImage = 'boardroom T45.jpg' 
+        #shutil.copy2('board.png', 'final.jpg')
+        #sys.exit()			  
     elif str(sys.argv[1]) == 'harrier':
         airframe = 'AV8BNA'        
-         
+        backgroundImage = 'boardroom AV8.jpg'
 if len(sys.argv) >= 3:        
     ruleset = str(sys.argv[2])         
     

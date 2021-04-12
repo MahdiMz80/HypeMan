@@ -23,7 +23,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 def updateDatabase(path):
   
-    if not os.path.isfile(path) or time.time() - getModificationTimeSeconds(path) > 3600:
+    if not os.path.isfile(path) or time.time() - getModificationTimeSeconds(path) > 1:
         print('Updating from Google.')
         updateFromGoogle()
     else:
@@ -106,7 +106,7 @@ def colorFromPoints(g):
     color = 'blankcell'
     
     if g == -1:             
-        color=blankcell
+        color=bluegraycolor
     elif g == 0:
         color=blackcolor
     elif g == 1:
@@ -119,7 +119,7 @@ def colorFromPoints(g):
         color = yellowcolor
     elif g == 4.0:
         color = greencolor 
-    elif g == 4.50:
+    elif g == 4.5:
         color = greencolor							  
     elif g == 5:                
         color = greencolor
@@ -286,12 +286,12 @@ def plotSquadron(pilotRows, options):
     # greencolor = '#0bab35'
     # bluecolor = '#01A2EA'
     
-    try:
-        minDate = data[-1]['ServerDate']
-        maxDate = data[0]['ServerDate']
-    except:
-        minDate =''
-        maxDate = ''
+    #try:
+    #    minDate = data[-1]['ServerDate']
+    #    maxDate = data[0]['ServerDate']
+    #except:
+    #    minDate =''
+    #    maxDate = ''
         
     textcolor = '#000000'
     edgecolor = '#708090'
@@ -308,6 +308,7 @@ def plotSquadron(pilotRows, options):
     cell.set_text_props(fontproperties=FontProperties(weight='bold',size=8))
     cell.set_edgecolor(edgecolor)
     #cell.set_fontsize(24)
+    currentMonthSQ = datetime.now().month
     titlestr = ' '+options['squadron']
     count = 0
     for col_idx in range(2,options['maxCols']+2):
@@ -469,13 +470,13 @@ def plotDefaultBoard(pilotRows, options):
         
     textcolor = '#FFFFF0'
     edgecolor = '#708090'
-    cell = tb.add_cell(0,0,5*width,height,text='Callsign',loc='center',facecolor=blankcell) #edgecolor='none'
+    cell = tb.add_cell(0,0,8*width,height,text='Callsign',loc='center',facecolor=blankcell) #edgecolor='none'
     cell.get_text().set_color(textcolor)
     cell.set_text_props(fontproperties=FontProperties(weight='bold',size=8))   
     cell.set_edgecolor(edgecolor)
     
     #cell.set_fontsize(24)
-    cell = tb.add_cell(0,1,width,height,text='',loc='center',facecolor=blankcell) #edgecolor='none'
+    cell = tb.add_cell(0,1,2*width,height,text='',loc='center',facecolor=blankcell) #edgecolor='none'
     cell.get_text().set_color(textcolor)
     cell.set_edgecolor(edgecolor)
     cell.set_text_props(fontproperties=FontProperties(weight='bold',size=8))
@@ -531,14 +532,14 @@ def plotDefaultBoard(pilotRows, options):
                 name = "SippyCup"    
 
                 
-        cell = tb.add_cell(row_idx,0,5*width,height,text=name,loc='center',facecolor=blankcell,edgecolor='blue') #edgecolor='none'    
+        cell = tb.add_cell(row_idx,0,8*width,height,text=name,loc='center',facecolor=blankcell,edgecolor='blue') #edgecolor='none'    
         cell.get_text().set_color(textcolor)
         cell.set_text_props(fontproperties=FontProperties(weight='bold',size="7.5"))
         cell.set_edgecolor(edgecolor)
     #    name = pilots[p_idx];
 
         
-        cell = tb.add_cell(row_idx,1,width,height,text=scoreText,loc='center',facecolor=blankcell)
+        cell = tb.add_cell(row_idx,1,2*width,height,text=scoreText,loc='center',facecolor=blankcell)
         cell.get_text().set_color(textcolor)
         cell.set_text_props(fontproperties=FontProperties(weight='bold',size="7.4"))
         cell.set_edgecolor(edgecolor)
@@ -664,10 +665,12 @@ if squadron != '':
         if index != -1:
             data2.append(i)
             count = count + 1;
+            
             #print('Keeping in squadron: ' , name)
           #  name = name.replace(squadron,'')
 
 # if the squadron was empty just keep the original data
+
 data = data2
 
 data2 = []
@@ -700,7 +703,19 @@ if squadron == '':
             data2.append(i)
             
     data = data2
-       
+
+if squadron != '':
+    currentMonthSQ = datetime.now().month
+    print('skipping landings not in current month')
+    for i in data: 
+        #print(i)
+        idate = i['ServerDate'].split('/')
+        imonth = int(idate[1])
+        
+        if imonth == currentMonthSQ:
+            data2.append(i)
+            
+    data = data2        
     
 for i in reversed(data):
     name = i['pilot']
