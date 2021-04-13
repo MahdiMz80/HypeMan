@@ -579,18 +579,51 @@ def plotTrapsheet(ts, pinfo):
     titlestr = callsign;
     titlestr+=' '
     unicorn = 'unicorn_'
+    nightunicorn = 'NIGHT5_'
+    WOFD = 'WOFD_'
+    Bolter = 'Bolter_'
+    OWO = 'OWO_'
+    Cut = 'Cut_'
     if unicorn in ps:
         print('unicorn in file name so change the grade to _OK_')
         #print('SIERRA HOTEL PASS!')
         titlestr+='_OK_'
         titlestr+=' '
         titlestr+='5.0'
+        titlestr+='PT'
+    elif nightunicorn in ps:
+        print('nightunicorn in file name so change the grade to _OK_')
+        titlestr+='_OK_'
+        titlestr+=' '
+        titlestr+='5.0'
+        titlestr+='PT'
+    elif Bolter in ps:
+        print('Bolter in file name so change the grade to Bolter')
+        titlestr+='--(BOLTER)'
+        titlestr+=' '
+        titlestr+='2.5'  
+        titlestr+='PT'
+    elif WOFD in ps:
+        print('WOFD in file name so change the grade to WOFD')
+        titlestr+='-- Foul Deck Waveoff'
+    elif OWO in ps:
+        print('OWO in file name so change the grade to OWO')
+        titlestr+='OWO'
+        titlestr+=' '
+        titlestr+='2.0'
+        titlestr+='PT'
+    elif Cut in ps:
+        print('Cut in file name so change the grade to Cut Pass')
+        titlestr+='- CUT PASS'
+        titlestr+=' '
+        titlestr+='0.0'
+        titlestr+='PT'
     else:
         print('no unicorn pass drawn')
         titlestr+=ts['Grade']
         titlestr+=' '
         titlestr+=str(ts['Points'][-1])
-    titlestr+='PT'
+        titlestr+='PT'
     titlestr+='\n'
     titlestr+=str(ts['Details'])
     titlestr+='\n'
